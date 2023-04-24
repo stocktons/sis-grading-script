@@ -19,12 +19,12 @@ def get_zip_file(id):
     Use Selenium to visit Rithm website, go to the proper assessment, and
     click "Claim & Download" button.
     """
-    
+
     # used to need these, seems like it works now without
-    ser = Service('/home/stocktons/chromedriver')
-    op = webdriver.ChromeOptions()
-    driver = webdriver.Chrome(service=ser, options=op)
-    # driver = webdriver.Chrome()
+    # ser = Service('/home/stocktons/chromedriver')
+    # op = webdriver.ChromeOptions()
+    # driver = webdriver.Chrome(service=ser, options=op)
+    driver = webdriver.Chrome()
 
     driver.get(ASSESSMENTS_URL)
     time.sleep(3)
