@@ -10,7 +10,7 @@ def setup_grading():
     """ Conductor function that facilitates easy downloading of assessments and
     setup of grading environment.
     """
-    breakpoint()
+    
     # determine os, usernames(s), and create downloads and assessments paths
     base_assessments_path, assessments_path, downloads_path = build_paths()
 
