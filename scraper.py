@@ -1,5 +1,5 @@
 from selenium import webdriver
-# from selenium.webdriver.chrome.service import Service # no longer needed?
+from selenium.webdriver.chrome.service import Service # no longer needed?
 from selenium.webdriver.common.by import By
 import time
 import os
@@ -8,12 +8,6 @@ from refs import ASSESSMENT_TO_XPATH_TR
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# used to need these, seems like it works now without
-# ser = Service('/Users/Sarah/Downloads/chromedriver_mac64/chromedriver')
-# op = webdriver.ChromeOptions()
-# driver = webdriver.Chrome(service=ser, options=op)
-driver = webdriver.Chrome()
 
 LOGIN_USER = "sarah"
 LOGIN_PW = os.environ.get("RITHM_STUDENTS_PW")
@@ -25,6 +19,12 @@ def get_zip_file(id):
     Use Selenium to visit Rithm website, go to the proper assessment, and
     click "Claim & Download" button.
     """
+    
+    # used to need these, seems like it works now without
+    ser = Service('/home/stocktons/chromedriver')
+    op = webdriver.ChromeOptions()
+    driver = webdriver.Chrome(service=ser, options=op)
+    # driver = webdriver.Chrome()
 
     driver.get(ASSESSMENTS_URL)
     time.sleep(3)

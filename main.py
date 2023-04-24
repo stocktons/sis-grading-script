@@ -1,6 +1,6 @@
 import os
 from helpers import (
-    PATH_TO_ASSESSMENTS_DIR,
+    build_paths,
     choose_assessment,
     handle_files,
     create_feedback_forms)
@@ -10,6 +10,9 @@ def setup_grading():
     """ Conductor function that facilitates easy downloading of assessments and
     setup of grading environment.
     """
+    breakpoint()
+    # determine os, usernames(s), and create downloads and assessments paths
+    base_assessments_path, assessments_path, downloads_path = build_paths()
 
     # user chooses assessment in terminal
     assessment_id = choose_assessment()
@@ -18,13 +21,13 @@ def setup_grading():
     get_zip_file(assessment_id)
 
     # move, unzip, and organize files
-    handle_files(assessment_id)
+    handle_files(downloads_path, assessments_path, assessment_id)
 
     # add feedback forms to newly created assessment directory
-    create_feedback_forms(assessment_id)
+    create_feedback_forms(base_assessments_path, assessments_path, assessment_id)
 
     # open in VSCode
     # code /Users/sarah/Rithm/assessments/r31/test/web-dev-1
-    os.system('code {0}{1}'.format(PATH_TO_ASSESSMENTS_DIR, assessment_id))
+    os.system('code {0}{1}'.format(assessments_path, assessment_id))
 
 setup_grading()

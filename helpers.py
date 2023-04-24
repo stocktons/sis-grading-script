@@ -7,14 +7,56 @@ from refs import ASSESSMENT_TO_XPATH_TR
 CURRENT_COHORT = os.environ.get('RITHM_COHORT')
 PREVIOUS_COHORT = 'r29'
 
-# find current root username for file paths
-# returns, among other things, the stdout, which is a bytestring of the username
-os_user_output = subprocess.run(['id', '-un'], capture_output=True)
-# grab bytestring form stdout and turn into a normal string, stripping newline char
-MAC_USER = os_user_output.stdout.decode('utf-8').strip()
-# MAC_USER = os.system('id -un') # doesn't return "sarah", returns process code of 0
+def determine_os_and_find_username():
+    """Ask the current OS what it is, find the current user's name(s) to determine 
+    whether to use file paths for WSL or for MacOS. Returns tuple of one or two 
+    usernames, depending on OS.
+    """
 
-PATH_TO_ASSESSMENTS_DIR = f"/Users/{MAC_USER}/Rithm/assessments/{CURRENT_COHORT}/"
+    # Will be "Darwin" for MacOS and "Linux" for WSL/Linux
+    os_name_data = subprocess.run(['uname'], capture_output=True)
+    os_name = os_name_data.stdout.decode('utf-8').strip()
+
+    if os_name == "Linux":
+        # linux_username_data will be like: 
+        # CompletedProcess(args=['whoami'], returncode=0, stdout=b'stocktons\n', stderr=b'')
+        linux_username_data = subprocess.run(['whoami'], capture_output=True)
+        # Grab "stocktons"
+        linux_username = linux_username_data.stdout.decode('utf-8').strip()
+        # Windows truncates the Linux username to 5 characters for its filepaths
+        windows_username = linux_username[:5] # "stock"
+
+        return (linux_username, windows_username)
+
+    if os_name == "Darwin":
+        # mac_username_data will be like: 
+        # CompletedProcess(args=['id', '-un'], returncode=0, stdout=b'sarah\n', stderr=b'')
+        mac_username_data= subprocess.run(['id', '-un'], capture_output=True)
+        # grab "sarah". not like that. ugh...
+        mac_username = mac_username_data.stdout.decode('utf-8').strip()
+
+        return (mac_username,)
+
+def build_paths():
+    """ """
+    usernames = determine_os_and_find_username()
+    (os_user, windows_username) = usernames
+    os = 'mac' if len(usernames) == 1 else 'wsl'
+
+    if os == 'wsl':
+        base_ass_path = f'/home/{os_user}/rithm/assessments/'
+        ass_path = f'{base_ass_path}{CURRENT_COHORT}/'
+        downlds_path = f'/home/{os_user}/Downloads/' 
+    elif os == 'mac':
+        base_ass_path = f'/Users/{os_user}/Rithm/assessments/'
+        ass_path = f'{base_ass_path}{CURRENT_COHORT}/'
+        downlds_path = f'/Users/{os_user}/Downloads/'
+    else:
+        raise ValueError(
+            "Only MacOS and WSL/Linux here, please. Take your fancypants OS elsewhere."
+        )
+
+    return (base_ass_path, ass_path, downlds_path)
 
 def choose_assessment():
     """ Display a list of assessments in the terminal for the user to choose from.
@@ -31,8 +73,9 @@ def choose_assessment():
     answers = inquirer.prompt(questions)
     return answers['assessment']
 
-def handle_files(id):
-    """ Takes in chosen assessment id (like 'web-dev-2') to use to create new
+def handle_files(downloads_path, assessments_path, id):
+    """ Takes in path to downloads directory, path to assessments directory, 
+    and chosen assessment id (like 'web-dev-2') to find files and to create new
     filenames.
     Find latest downloaded .zip file in Downloads directory, extract filename,
     move to assessments directory, unzip, rename unzipped file, delete .zip file,
@@ -41,7 +84,7 @@ def handle_files(id):
     """
 
     # find all .zip files in Downloads directory
-    zipped_downloads = glob.glob(f'/users/{MAC_USER}/Downloads/*.zip')
+    zipped_downloads = glob.glob(f'{downloads_path}*.zip')
     # of the .zip files, grab the most recent
     # will look like: '/users/sarah/Downloads/submissions-20230423.zip'
     latest_zipped_download = max(zipped_downloads, key=os.path.getctime)
@@ -58,22 +101,22 @@ def handle_files(id):
 
     # os.system doesn't like f-strings, so use .format instead
     # mv '/users/sarah/Downloads/submissions-20230423.zip' /Users/sarah/Rithm/assessments/r31/test/
-    os.system('mv {0} {1}'.format(safe_path_lzd, PATH_TO_ASSESSMENTS_DIR))
+    os.system('mv {0} {1}'.format(safe_path_lzd, assessments_path))
 
     # unzip /Users/sarah/Rithm/assessments/r31/test/'submissions-20230423.zip' -d /Users/sarah/Rithm/assessments/r31/test/
-    os.system('unzip {0}{1} -d {0}'.format(PATH_TO_ASSESSMENTS_DIR, safe_zipped_filename))
+    os.system('unzip {0}{1} -d {0}'.format(assessments_path, safe_zipped_filename))
 
     # rm -rf /Users/sarah/Rithm/assessments/r31/test/'submissions-20230423.zip'
-    os.system('rm -rf {0}{1}'.format(PATH_TO_ASSESSMENTS_DIR, safe_zipped_filename))
+    os.system('rm -rf {0}{1}'.format(assessments_path, safe_zipped_filename))
 
     # rm -rf $(find /Users/sarah/Rithm/assessments/r31/test/web-dev-1 -type d -name __MACOSX)
-    os.system('rm -rf $(find {0}{1} -type d -name __MACOSX)'.format(PATH_TO_ASSESSMENTS_DIR, id))
+    os.system('rm -rf $(find {0}{1} -type d -name __MACOSX)'.format(assessments_path, id))
 
     # rm -rf $(find /Users/sarah/Rithm/assessments/r31/test/web-dev-1 -type d -name .git)
-    os.system('rm -rf $(find {0}{1} -type d -name .git)'.format(PATH_TO_ASSESSMENTS_DIR, id))
+    os.system('rm -rf $(find {0}{1} -type d -name .git)'.format(assessments_path, id))
 
 
-def create_feedback_forms(id):
+def create_feedback_forms(base_assessments_path, assessments_path, id):
     """ Takes in chosen assessment id (like 'web-dev-2') to use to create new
     filenames.
     Find blank feedback template from previous cohort and copy to current assessment
@@ -88,7 +131,7 @@ def create_feedback_forms(id):
     #  'b"first1-last1\nfirst2-last2\n"'
     file_list_output = subprocess.run([
         'ls', '{0}{1}'
-        .format(PATH_TO_ASSESSMENTS_DIR, id)],
+        .format(assessments_path, id)],
         capture_output=True)
 
     # take the raw output from above, pull out the stdout, convert to a standard
@@ -101,16 +144,16 @@ def create_feedback_forms(id):
         # copy blank feedback.md from previous cohort to new blank, personalized
         # feedback.md for each student, like first-last-feedback.md
         os.system(
-            ('cp /Users/{0}/Rithm/assessments/{1}/{2}/feedback.md ' +
+            ('cp {0}{1}/{2}/feedback.md ' +
             '{3}{2}/{4}')
-            .format(MAC_USER, PREVIOUS_COHORT, id, PATH_TO_ASSESSMENTS_DIR, filename)
+            .format(base_assessments_path, PREVIOUS_COHORT, id, assessments_path, filename)
         )
 
     # also copy blank feedback.md from previous cohort to new blank feedback.md
     # for use next time and to facilitate blanket changes in this grading cycle
     os.system(
-        ('cp /Users/{0}/Rithm/assessments/{1}/{2}/feedback.md ' +
+        ('cp {0}{1}/{2}/feedback.md ' +
         '{3}{2}')
-        .format(MAC_USER, PREVIOUS_COHORT, id, PATH_TO_ASSESSMENTS_DIR)
+        .format(base_assessments_path, PREVIOUS_COHORT, id, assessments_path)
     )
 
