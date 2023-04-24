@@ -8,8 +8,8 @@ CURRENT_COHORT = os.environ.get('RITHM_COHORT')
 PREVIOUS_COHORT = 'r29'
 
 def determine_os_and_find_username():
-    """Ask the current OS what it is, find the current user's name(s) to determine 
-    whether to use file paths for WSL or for MacOS. Returns tuple of one or two 
+    """Ask the current OS what it is, find the current user's name(s) to determine
+    whether to use file paths for WSL or for MacOS. Returns tuple of one or two
     usernames, depending on OS.
     """
 
@@ -18,7 +18,7 @@ def determine_os_and_find_username():
     os_name = os_name_data.stdout.decode('utf-8').strip()
 
     if os_name == "Linux":
-        # linux_username_data will be like: 
+        # linux_username_data will be like:
         # CompletedProcess(args=['whoami'], returncode=0, stdout=b'stocktons\n', stderr=b'')
         linux_username_data = subprocess.run(['whoami'], capture_output=True)
         # Grab "stocktons"
@@ -29,24 +29,24 @@ def determine_os_and_find_username():
         return (linux_username, windows_username)
 
     if os_name == "Darwin":
-        # mac_username_data will be like: 
+        # mac_username_data will be like:
         # CompletedProcess(args=['id', '-un'], returncode=0, stdout=b'sarah\n', stderr=b'')
         mac_username_data= subprocess.run(['id', '-un'], capture_output=True)
         # grab "sarah". not like that. ugh...
         mac_username = mac_username_data.stdout.decode('utf-8').strip()
 
-        return (mac_username,)
+        return (mac_username, 'mac')
 
 def build_paths():
     """ """
     usernames = determine_os_and_find_username()
-    (os_user, windows_username) = usernames
-    os = 'mac' if len(usernames) == 1 else 'wsl'
+    (os_user, other) = usernames # FIXME: temp fix for tuples needing to be same length/not needing windows username anymore. Change data structure, get rid of windows username logic.
+    os = 'mac' if other == 'mac' else 'wsl'
 
     if os == 'wsl':
         base_ass_path = f'/home/{os_user}/rithm/assessments/'
         ass_path = f'{base_ass_path}{CURRENT_COHORT}/'
-        downlds_path = f'/home/{os_user}/Downloads/' 
+        downlds_path = f'/home/{os_user}/Downloads/'
     elif os == 'mac':
         base_ass_path = f'/Users/{os_user}/Rithm/assessments/'
         ass_path = f'{base_ass_path}{CURRENT_COHORT}/'
@@ -74,7 +74,7 @@ def choose_assessment():
     return answers['assessment']
 
 def handle_files(downloads_path, assessments_path, id):
-    """ Takes in path to downloads directory, path to assessments directory, 
+    """ Takes in path to downloads directory, path to assessments directory,
     and chosen assessment id (like 'web-dev-2') to find files and to create new
     filenames.
     Find latest downloaded .zip file in Downloads directory, extract filename,
