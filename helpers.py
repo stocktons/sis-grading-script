@@ -26,7 +26,7 @@ def determine_os_and_find_username():
         # Windows truncates the Linux username to 5 characters for its filepaths
         windows_username = linux_username[:5] # "stock"
 
-        return (linux_username, windows_username)
+        return {'os': 'linux', 'username': linux_username, 'windows_username': windows_username}
 
     if os_name == "Darwin":
         # mac_username_data will be like:
@@ -35,19 +35,21 @@ def determine_os_and_find_username():
         # grab "sarah". not like that. ugh...
         mac_username = mac_username_data.stdout.decode('utf-8').strip()
 
-        return (mac_username, 'mac')
+        return {'os': 'mac', 'username': mac_username}
 
 def build_paths():
     """ """
-    usernames = determine_os_and_find_username()
-    (os_user, other) = usernames # FIXME: temp fix for tuples needing to be same length/not needing windows username anymore. Change data structure, get rid of windows username logic.
-    os = 'mac' if other == 'mac' else 'wsl'
+    system_data = determine_os_and_find_username()
+    os_name = system_data['os']
+    os_user = system_data['username']
+    # not needed in current implementation, but leaving in case of future uses
+    # windows_username = system_data.get('windows_username')
 
-    if os == 'wsl':
+    if os_name == 'linux':
         base_ass_path = f'/home/{os_user}/rithm/assessments/'
         ass_path = f'{base_ass_path}{CURRENT_COHORT}/'
         downlds_path = f'/home/{os_user}/Downloads/'
-    elif os == 'mac':
+    elif os_name == 'mac':
         base_ass_path = f'/Users/{os_user}/Rithm/assessments/'
         ass_path = f'{base_ass_path}{CURRENT_COHORT}/'
         downlds_path = f'/Users/{os_user}/Downloads/'
@@ -100,21 +102,23 @@ def handle_files(downloads_path, assessments_path, id):
     safe_zipped_filename = f"'{zipped_filename}'"
 
     # os.system doesn't like f-strings, so use .format instead
-    # mv '/users/sarah/Downloads/submissions-20230423.zip' /Users/sarah/Rithm/assessments/r31/test/
+    # move downloaded .zip file from downloads directory to assessments directory
     os.system('mv {0} {1}'.format(safe_path_lzd, assessments_path))
 
-    # unzip /Users/sarah/Rithm/assessments/r31/test/'submissions-20230423.zip' -d /Users/sarah/Rithm/assessments/r31/test/
+    # unzip downloaded .zip file
     os.system('unzip {0}{1} -d {0}'.format(assessments_path, safe_zipped_filename))
 
-    # rm -rf /Users/sarah/Rithm/assessments/r31/test/'submissions-20230423.zip'
+    # remove now unneeded .zip file
     os.system('rm -rf {0}{1}'.format(assessments_path, safe_zipped_filename))
 
-    # rm -rf $(find /Users/sarah/Rithm/assessments/r31/test/web-dev-1 -type d -name __MACOSX)
+    # remove commonly-found unneeded files and directories
     os.system('rm -rf $(find {0}{1} -type d -name __MACOSX)'.format(assessments_path, id))
-
-    # rm -rf $(find /Users/sarah/Rithm/assessments/r31/test/web-dev-1 -type d -name .git)
     os.system('rm -rf $(find {0}{1} -type d -name .git)'.format(assessments_path, id))
+    os.system('rm -rf $(find {0}{1} -type d -name .vscode)'.format(assessments_path, id))
+    os.system('rm -rf $(find {0}{1} -type d -name __pycache__)'.format(assessments_path, id)) # TODO: if found, add a line to feedback.md for that student?!
 
+    # TODO: requirements.txt finder, if found, create venv, activate, install requirements, deactivate
+    # TODO: scan for node modules, if found, install
 
 def create_feedback_forms(base_assessments_path, assessments_path, id):
     """ Takes in chosen assessment id (like 'web-dev-2') to use to create new
