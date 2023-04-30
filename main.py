@@ -5,7 +5,7 @@ from helpers import (
     handle_files,
     create_feedback_forms,
     find_and_run_jasmine_tests)
-from scraper import get_zip_file
+from scrapers import get_zip_file
 
 # TODO: requirements.txt finder, if found, create venv, activate, install requirements, deactivate
 # TODO: scan for node modules, if found, install

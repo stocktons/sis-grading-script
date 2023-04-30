@@ -3,7 +3,7 @@ import subprocess
 import inquirer
 import glob
 from refs import ASSESSMENT_TO_XPATH_TR
-from jasmine_helper import make_jasmine_report
+from scrapers import make_jasmine_report
 
 CURRENT_COHORT = os.environ.get('RITHM_COHORT')
 PREVIOUS_COHORT = 'r29'
@@ -102,7 +102,9 @@ def handle_files(downloads_path, assessments_path, id):
     zipped_filename = latest_zipped_download[filename_start_index:]
     safe_zipped_filename = f"'{zipped_filename}'"
 
-    # os.system doesn't like f-strings, so use .format instead
+    # os.system doesn't like f-strings, so use .format instead TODO: I don't think
+    # that's actually accurate, seems to be working in other places now. Refactor
+    # because .format() is annoying
     # move downloaded .zip file from downloads directory to assessments directory
     os.system('mv {0} {1}'.format(safe_path_lzd, assessments_path))
 
