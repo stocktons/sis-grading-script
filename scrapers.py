@@ -53,7 +53,7 @@ def get_zip_file(id):
     # wait for download to finish
     time.sleep(5)
 
-    # TODO: this also seems unneeded in latest version (exciting!), investigate
+    # Selenium now manages this automatically, but it's good practice to be explicit here
     driver.quit()
 
 
@@ -76,7 +76,7 @@ def make_jasmine_report(html_files):
                 ".jasmine-description > a:nth-child(2)"
             )
             for msg in failure_messages:
-                print(f'''    \x1b[0;31;49m ❌ {msg.text}\x1b[0m''')
+                print(f'    \x1b[0;31;49m ❌ {msg.text}\x1b[0m')
         else:
             # 32 is green font
             print(f'\x1b[0;32;49m{path}\x1b[0m')

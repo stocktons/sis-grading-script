@@ -31,12 +31,12 @@ def setup_grading():
     # add feedback forms to newly created assessment directory
     create_feedback_forms(base_assessments_path, assessments_path, assessment_id)
 
-    # open in VSCode
-    # code /Users/sarah/Rithm/assessments/r31/test/web-dev-1
-    os.system('code {0}{1}'.format(assessments_path, assessment_id))
-
     # find any Jasmine tests and run them
     find_and_run_jasmine_tests(assessments_path, assessment_id)
+
+    # open assessments in VSCode
+    # code /Users/sarah/Rithm/assessments/r31/test/web-dev-1
+    os.system('code {0}{1}'.format(assessments_path, assessment_id))
 
 setup_grading()
 

@@ -168,6 +168,13 @@ def find_and_run_jasmine_tests(assessment_path, assessment_id):
     in terminal.
     """
 
+    # look in the current assesment folder for all .html files.
+    # Search those .html files recursively (-r) for the word (-w) "jasmine-core"
+    # jasmine-core is part of the CDN link and therefor is a good identifier for any
+    # html file that will run jasmine tests
+    # when and html file that contains the word "jasmine-core" is found,
+    # output the name of that file (-l)
+    
     # escape the curly braces needed for grep with more curly braces per Python f-string escape rules
     results = subprocess.run(
         f'find {assessment_path}{assessment_id} -name "*.html" -exec grep -rlw "jasmine-core" {{}} \;',

@@ -59,3 +59,24 @@ find_and_run_jasmine_tests()
 # os.system(f'for f in *\ *; do mv "$f" "${{f// /_}}"; done')
 # os.system(f'while read line ; do mv "$line" "${{line// /_}}" ; done < <(find {base_path} -iname "* *")')
 
+# add a line after a match (find s01. ... and add b01\Baking Powder)
+# sed '/^s01.*/a b01\tBaking Powder' products.txt
+
+# add a line before a match (find anothervalue= ... and insert before=me before it)
+# sed '/^anothervalue=.*/i before=me' test.txt
+
+# <script src="/Users/sarah/Rithm/rithm-apps/curric/assessments/flask-1/solution/scrambledPalindromeCheck.test.js"></script>
+
+# I want to find </body> and insert a <script... > before it
+# will have to copy the test file and rename it locally, then construct the local path
+
+### HOLY SHIT THIS TOOK FOREVER
+# https://stackoverflow.com/questions/40843994/extra-characters-after-at-the-end-of-a-command
+# Macs require the -i '' to change the file in place
+# they also require that the command be written across multiple lines with a \ at the end of the first line
+# using the | to replace the typical / separator so that the /body doesn't get confused or need to escape
+# must precede first custom delimiter with a \
+sed -i '' '\|^</body>.*| i\
+<script src="/Users/sarah/Rithm/rithm-apps/curric/assessments/flask-1/solution/scrambledPalindromeCheck.test.js"></script>
+' /Users/sarah/Rithm/assessments/r31/flask-1/michael-herman/flask-1/scrambledPalindromeCheck.html
+
