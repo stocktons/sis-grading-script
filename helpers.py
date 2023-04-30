@@ -3,6 +3,7 @@ import subprocess
 import inquirer
 import glob
 from refs import ASSESSMENT_TO_XPATH_TR
+from jasmine_helper import make_jasmine_report
 
 CURRENT_COHORT = os.environ.get('RITHM_COHORT')
 PREVIOUS_COHORT = 'r29'
@@ -117,9 +118,6 @@ def handle_files(downloads_path, assessments_path, id):
     os.system('rm -rf $(find {0}{1} -type d -name .vscode)'.format(assessments_path, id))
     os.system('rm -rf $(find {0}{1} -type d -name __pycache__)'.format(assessments_path, id)) # TODO: if found, add a line to feedback.md for that student?!
 
-    # TODO: requirements.txt finder, if found, create venv, activate, install requirements, deactivate
-    # TODO: scan for node modules, if found, install
-
 def create_feedback_forms(base_assessments_path, assessments_path, id):
     """ Takes in chosen assessment id (like 'web-dev-2') to use to create new
     filenames.
@@ -161,3 +159,36 @@ def create_feedback_forms(base_assessments_path, assessments_path, id):
         .format(base_assessments_path, PREVIOUS_COHORT, id, assessments_path)
     )
 
+def find_and_run_jasmine_tests(assessment_path, assessment_id):
+    """ Takes in a path like '/Users/sarah/Rithm/assessments/r31/', and an assessment_id
+    like 'web-dev-2'. Finds all .html files that contain Jasmine tests and opens
+    them with Selenium. Scrapes results from Chrome and displays condensed output
+    in terminal.
+    """
+
+    # escape the curly braces needed for grep with more curly braces per Python f-string escape rules
+    results = subprocess.run(
+        f'find {assessment_path}{assessment_id} -name "*.html" -exec grep -rlw "jasmine-core" {{}} \;',
+        shell=True,
+        capture_output=True
+    )
+
+    file_list = results.stdout.decode('utf-8').splitlines()
+
+    # TODO: add line to link to Rithm solution test script to student html file so both
+    # their tests and ours get run at once
+    # Selenium / things like LiveServer don't like to open files from other directories linked like:
+    # <script src="/Users/sarah/Rithm/rithm-apps/curric/assessments/flask-1/solution/scrambledPalindromeCheck.test.js"></script>
+    # Generates an error of:
+    # Refused to execute script from 'http://127.0.0.1:5500/Users/sarah/Rithm/rithm-apps/curric/assessments/flask-1/solution/scrambledPalindromeCheck.test.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled.
+    # but opening the file in the browser directly WILL pull Rithm's tests with that exact same script tag & link
+    # either need to get to the bottom of that (changing the content type inline doesn't work)
+    # or just copy rithm's test file to the same directory and add the link to the
+    # local copy (much easier, but makes me sad)
+
+    # put the filename in quotes in case the student put spaces in their path
+    formatted_file_names = [str(file) for file in file_list]
+
+    make_jasmine_report(formatted_file_names)
+
+find_and_run_jasmine_tests('/Users/sarah/Rithm/assessments/r31/', 'flask-1')

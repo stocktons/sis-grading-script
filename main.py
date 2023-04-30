@@ -3,14 +3,19 @@ from helpers import (
     build_paths,
     choose_assessment,
     handle_files,
-    create_feedback_forms)
+    create_feedback_forms,
+    find_and_run_jasmine_tests)
 from scraper import get_zip_file
+
+# TODO: requirements.txt finder, if found, create venv, activate, install requirements, deactivate
+# TODO: scan for node modules, if found, install
+# TODO: run all types of test suites automatically (Jasmine nearly done)
 
 def setup_grading():
     """ Conductor function that facilitates easy downloading of assessments and
     setup of grading environment.
     """
-    
+
     # determine os, usernames(s), and create downloads and assessments paths
     base_assessments_path, assessments_path, downloads_path = build_paths()
 
@@ -30,4 +35,9 @@ def setup_grading():
     # code /Users/sarah/Rithm/assessments/r31/test/web-dev-1
     os.system('code {0}{1}'.format(assessments_path, assessment_id))
 
+    # find any Jasmine tests and run them
+    find_and_run_jasmine_tests(assessments_path, assessment_id)
+
 setup_grading()
+
+
