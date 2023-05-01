@@ -2,15 +2,16 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
 import os
-from helpers import CURRENT_COHORT
+# from helpers import CURRENT_COHORT
 from refs import ASSESSMENT_TO_XPATH_TR
 from dotenv import load_dotenv
 
 load_dotenv()
 
-LOGIN_USER = "sarah"
-LOGIN_PW = os.environ.get("RITHM_STUDENTS_PW")
-ASSESSMENTS_URL = f"https://{CURRENT_COHORT}.students.rithmschool.com/assessments/"
+LOGIN_USER = 'sarah'
+LOGIN_PW = os.environ.get('RITHM_STUDENTS_PW')
+CURRENT_COHORT = os.environ.get('RITHM_COHORT')
+ASSESSMENTS_URL = f'https://{CURRENT_COHORT}.students.rithmschool.com/assessments/'
 
 
 def get_zip_file(id):

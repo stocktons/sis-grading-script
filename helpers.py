@@ -120,7 +120,26 @@ def handle_files(downloads_path, assessments_path, id):
     os.system('rm -rf $(find {0}{1} -type d -name .vscode)'.format(assessments_path, id))
     os.system('rm -rf $(find {0}{1} -type d -name __pycache__)'.format(assessments_path, id)) # TODO: if found, add a line to feedback.md for that student?!
 
-def create_feedback_forms(base_assessments_path, assessments_path, id):
+def get_student_names(assessments_path, id):
+    """ Takes in the path to a particular cohort's assessments folder and an
+    assessment id. Generates a list of student names like:
+    ['first-last1', 'first-last2', 'first-last3'].
+    NOTE: This is very naïve and only works as expected if this is run on a
+    freshly-unzipped directory that ONLY has student-name folders in it.
+    """
+
+    # Pull student names from downloaded files. Files are
+    # named according to students, and will be captured in a bytestring like
+    #  'b"first1-last1\nfirst2-last2\n"'
+    file_list_output = subprocess.run(['ls', f'{assessments_path}/{id}'], capture_output=True)
+
+    # take the raw output from above, pull out the stdout, convert to a standard
+    # string and split into a list on newlines
+    student_names = file_list_output.stdout.decode('utf-8').splitlines()
+
+    return student_names
+
+def create_feedback_forms(student_names, base_assessments_path, assessments_path, id):
     """ Takes in chosen assessment id (like 'web-dev-2') to use to create new
     filenames.
     Find blank feedback template from previous cohort and copy to current assessment
@@ -130,19 +149,7 @@ def create_feedback_forms(base_assessments_path, assessments_path, id):
     Create new blank individualized feedback forms.
     """
 
-    # list all the files in the newly downloaded and unzipped directory. Files are
-    # named according to students, and will be captured in a bytestring like
-    #  'b"first1-last1\nfirst2-last2\n"'
-    file_list_output = subprocess.run([
-        'ls', '{0}{1}'
-        .format(assessments_path, id)],
-        capture_output=True)
-
-    # take the raw output from above, pull out the stdout, convert to a standard
-    # string and split into a list on newlines
-    file_list = file_list_output.stdout.decode('utf-8').splitlines()
-
-    feedback_filenames = [f'{name}-feedback.md' for name in file_list]
+    feedback_filenames = [f'{name}-feedback.md' for name in student_names]
 
     for filename in feedback_filenames:
         # copy blank feedback.md from previous cohort to new blank, personalized
@@ -168,13 +175,13 @@ def find_and_run_jasmine_tests(assessment_path, assessment_id):
     in terminal.
     """
 
-    # look in the current assesment folder for all .html files.
+    # look in the current assessment folder for all .html files.
     # Search those .html files recursively (-r) for the word (-w) "jasmine-core"
     # jasmine-core is part of the CDN link and therefor is a good identifier for any
     # html file that will run jasmine tests
     # when and html file that contains the word "jasmine-core" is found,
     # output the name of that file (-l)
-    
+
     # escape the curly braces needed for grep with more curly braces per Python f-string escape rules
     results = subprocess.run(
         f'find {assessment_path}{assessment_id} -name "*.html" -exec grep -rlw "jasmine-core" {{}} \;',
@@ -199,5 +206,3 @@ def find_and_run_jasmine_tests(assessment_path, assessment_id):
     formatted_file_names = [str(file) for file in file_list]
 
     make_jasmine_report(formatted_file_names)
-
-find_and_run_jasmine_tests('/Users/sarah/Rithm/assessments/r31/', 'flask-1')

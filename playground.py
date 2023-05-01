@@ -5,6 +5,7 @@ import os
 import subprocess
 base_path = '/Users/sarah/Rithm/assessments/r31/flask-1'
 # base_path = '/Users/sarah/Projects/test'
+curric_path = '/Users/sarah/Rithm/rithm-apps/curric/assessments'
 
 # https://stackoverflow.com/questions/16956810/how-to-find-all-files-containing-specific-text-string-on-linux
 # grep -rlw '/Users/sarah/Rithm/assessments/r31/flask-1/' -e 'jasmine-core'
@@ -44,7 +45,7 @@ def find_and_run_jasmine_tests():
 
         os.system(f'open "{file}"')
 
-find_and_run_jasmine_tests()
+# find_and_run_jasmine_tests()
 
 # not needed, just wrapped the path in quotes, but keeping for further study/interest
 # search for filenames that contain spaces and replace all spaces with underscores:
@@ -76,7 +77,60 @@ find_and_run_jasmine_tests()
 # they also require that the command be written across multiple lines with a \ at the end of the first line
 # using the | to replace the typical / separator so that the /body doesn't get confused or need to escape
 # must precede first custom delimiter with a \
-sed -i '' '\|^</body>.*| i\
-<script src="/Users/sarah/Rithm/rithm-apps/curric/assessments/flask-1/solution/scrambledPalindromeCheck.test.js"></script>
-' /Users/sarah/Rithm/assessments/r31/flask-1/michael-herman/flask-1/scrambledPalindromeCheck.html
+# sed -i '' '\|^</body>.*| i\
+# <script src="/Users/sarah/Rithm/rithm-apps/curric/assessments/flask-1/solution/scrambledPalindromeCheck.test.js"></script>
+# ' /Users/sarah/Rithm/assessments/r31/flask-1/student-name/flask-1/scrambledPalindromeCheck.html
 
+
+def setup_jasmine_tests(assessment_id, assessments_path):
+    """ Takes in:
+     - assessment id like 'web-dev-2',
+     - the path to the current cohort's assessments, like '/Users/sarah/Rithm/assessments/r31'
+
+    Finds all Jasmine tests in the solution folder of the current assessment.
+    Finds the name of the directory students have stored their Jasmine tests.
+    Copies the Rithm solution tests to their directory.
+    Adds a <script> tag linking to the Rithm solution copy to the bottom of their .html file
+    """
+
+    # find all *.test.js in curric solution
+    results = subprocess.run(f'find {curric_path}/{assessment_id}/solution -name "*.test.js"', shell=True, capture_output=True)
+    file_list = results.stdout.decode('utf-8').splitlines()
+    print("file_list", file_list)
+
+    # find the name of the folder that has .test.js files for each student
+    # https://unix.stackexchange.com/questions/111949/get-list-of-subdirectories-which-contain-a-file-whose-name-contains-a-string
+    # The below finds all files below the given directory that are regular files
+    # (-type f) and have .test.js at the end of their name (-name '*.test.js').
+    # Next, sed removes the file name, leaving just the directory name. Then, the
+    # list of directories is sorted (sort) and duplicates removed (uniq).
+    # The sed command consists of a single substitute. It looks for matches to the
+    # regular expression /[^/]+$ and replaces anything matching that with nothing.
+    # The dollar sign means the end of the line. [^/]+' means one or more characters
+    # that are not slashes. Thus, /[^/]+$ means all characters from the final slash
+    # to the end of the line. In other words, this matches the file name at the end
+    # of the full path. Thus, the sed command removes the file name, leaving unchanged
+    # the name of directory that the file was in.
+    # replace -E with -r for non-Mac
+    # NEED to make them raw strings with r"...". Can combine with f-string like fr"..."
+
+    test_directories_raw = subprocess.run(f"find {assessments_path}/{assessment_id} -type f -name '*.test.js' | sed -E 's|/[^/]+$||' |sort -u", shell=True, capture_output=True)
+    test_directories = test_directories_raw.stdout.decode('utf-8').splitlines()
+
+    for dir in test_directories:
+        for file in file_list:
+            # grab the filename from the end of the curric path
+            filename = file.split('/')[-1]
+            test_name = filename.split(".")[0]
+            # add rithm- in front of it.
+            # add that to the end of the dir
+            new_test_file_path = f'{dir}/rithm-{filename}'
+            subprocess.run(f'cp {file} {new_test_file_path}', shell=True)
+
+            # line breaks and weird indentations are part of the command, don't change
+            subprocess.run(fr"""sed -i '' '\|.*</body>.*| i\
+    <script src="rithm-{filename}"></script>
+            ' {dir}/{test_name}.html
+            """, shell=True)
+
+setup_jasmine_tests('web-dev-1', '/Users/sarah/Rithm/assessments/r31')
