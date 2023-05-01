@@ -114,18 +114,34 @@ def setup_jasmine_tests(assessment_id, assessments_path):
     # replace -E with -r for non-Mac
     # NEED to make them raw strings with r"...". Can combine with f-string like fr"..."
 
-    test_directories_raw = subprocess.run(f"find {assessments_path}/{assessment_id} -type f -name '*.test.js' | sed -E 's|/[^/]+$||' |sort -u", shell=True, capture_output=True)
+    test_directories_raw = subprocess.run(f"find {assessments_path}/test-{assessment_id} -type f -name '*.test.js' | sed -E 's|/[^/]+$||' |sort -u", shell=True, capture_output=True)
     test_directories = test_directories_raw.stdout.decode('utf-8').splitlines()
 
+    # dir: /Users/sarah/Rithm/assessments/r31/test-web-dev-1/student-name/web-dev-1
     for dir in test_directories:
+
+        # file: /Users/sarah/Rithm/rithm-apps/curric/assessments/web-dev-1/solution/sortAlmostSorted.test.js
         for file in file_list:
-            # grab the filename from the end of the curric path
+
+            # filename: 'sortAlmostSorted.test.js'
             filename = file.split('/')[-1]
+
+            # test_name: 'sortAlmostSorted'
             test_name = filename.split(".")[0]
-            # add rithm- in front of it.
-            # add that to the end of the dir
+
+            # new_test_file_path: /Users/sarah/Rithm/assessments/r31/test-web-dev-1/student-name/web-dev-1/rithm-sortAlmostSorted.test.js
             new_test_file_path = f'{dir}/rithm-{filename}'
             subprocess.run(f'cp {file} {new_test_file_path}', shell=True)
+
+            # TODO:
+            # find all it(" and test(" occurrences and replace with it("rithm test:
+            # sed -i 's/old-text/new-text/g' input.txt
+            # WORKS IN SHELL: sed -i '' 's/it("/it("rithm test: /g' /Users/sarah/Rithm/assessments/r31/test-web-dev-1/student-name/web-dev-1/rithm-sortAlmostSorted.test.js
+            # BROKEN IN THIS SCRIPT: "No such file or directory"
+            # something with quotes? https://stackoverflow.com/questions/7517632/how-do-i-escape-slashes-and-double-and-single-quotes-in-sed
+            # or maybe the file to overwrite? -i ''
+            # https://linux.overshoot.tv/wiki/bash_script/sed_cant_read_no_such_file_or_directory
+            # subprocess.run(fr'sed -i "" "s/it(\"/it(\"rithm test: /g" "{new_test_file_path}"')
 
             # line breaks and weird indentations are part of the command, don't change
             subprocess.run(fr"""sed -i '' '\|.*</body>.*| i\
