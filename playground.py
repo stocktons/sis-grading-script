@@ -90,7 +90,10 @@ def setup_jasmine_tests(assessment_id, assessments_path):
     Finds all Jasmine tests in the solution folder of the current assessment.
     Finds the name of the directory students have stored their Jasmine tests.
     Copies the Rithm solution tests to their directory.
-    Adds a <script> tag linking to the Rithm solution copy to the bottom of their .html file
+    Renames the "it" or "test" statements in the Rithm solution copy to be like
+    'it("rithm test: sorts the array correctly"...' to differentiate whether it's
+    a Rithm test or a student test that fails in the final printout.
+    Adds a <script> tag linking to the Rithm solution copy to the bottom of their .html file.
     """
 
     # find all *.test.js in curric solution
