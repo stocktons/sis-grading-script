@@ -133,15 +133,10 @@ def setup_jasmine_tests(assessment_id, assessments_path):
             new_test_file_path = f'{dir}/rithm-{filename}'
             subprocess.run(f'cp {file} {new_test_file_path}', shell=True)
 
-            # TODO:
             # find all it(" and test(" occurrences and replace with it("rithm test:
-            # sed -i 's/old-text/new-text/g' input.txt
-            # WORKS IN SHELL: sed -i '' 's/it("/it("rithm test: /g' /Users/sarah/Rithm/assessments/r31/test-web-dev-1/student-name/web-dev-1/rithm-sortAlmostSorted.test.js
-            # BROKEN IN THIS SCRIPT: "No such file or directory"
-            # something with quotes? https://stackoverflow.com/questions/7517632/how-do-i-escape-slashes-and-double-and-single-quotes-in-sed
-            # or maybe the file to overwrite? -i ''
-            # https://linux.overshoot.tv/wiki/bash_script/sed_cant_read_no_such_file_or_directory
-            # subprocess.run(fr'sed -i "" "s/it(\"/it(\"rithm test: /g" "{new_test_file_path}"')
+            # TODO: use a regex OR to combine into one
+            subprocess.run(fr'sed -i "" "s/it(\"/it(\"rithm test: /g" "{new_test_file_path}"', shell=True)
+            subprocess.run(fr'sed -i "" "s/test(\"/it(\"rithm test: /g" "{new_test_file_path}"', shell=True)
 
             # line breaks and weird indentations are part of the command, don't change
             subprocess.run(fr"""sed -i '' '\|.*</body>.*| i\
