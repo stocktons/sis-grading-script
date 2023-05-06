@@ -147,4 +147,55 @@ def setup_jasmine_tests(assessment_id, assessments_path):
             ' {dir}/{test_name}.html
             """, shell=True)
 
-setup_jasmine_tests('web-dev-1', '/Users/sarah/Rithm/assessments/r31')
+# setup_jasmine_tests('web-dev-1', '/Users/sarah/Rithm/assessments/r31')
+
+
+def setup_flask_apps(assessment_id, assessments_path):
+    """ Search for a requirements.txt files in student submissions.
+    If found, create a venv in that folder, activate it, and install the
+    requirements.txt. Start Flask servers on sequentially-numbered ports
+    and open Chrome at those addresses.
+    """
+
+    # find all flask app directories
+    flask_directories = find_directories(assessments_path, assessment_id, 'requirements.txt')
+    print(flask_directories)
+
+    for i, dir in enumerate(flask_directories):
+        # create a unique server port for each project
+        port = i + 5001
+
+        # There is an 'extra' deactivate and reactivate sequence because sometimes
+        # the venv fails to recognize some freshly-installed packages otherwise
+        command = f"""tell application "Terminal"
+                            activate
+                            tell application "System Events" to keystroke "t" using {{command down}}
+                            do script "cd {dir}" in front window
+                            do script "python3 -m venv venv" in front window
+                            do script "source venv/bin/activate" in front window
+                            do script "pip3 install -r requirements.txt" in front window
+                            do script "deactivate" in front window
+                            do script "source venv/bin/activate" in front window
+                            do script "flask run -p {port}" in front window
+                        end tell"""
+        subprocess.call(["osascript", "-e", command])
+        # the following line will execute before everything is installed so nothing
+        # will load. Just refresh the browser once the installations are complete
+        # and the server has started.
+        subprocess.run(f'open http://localhost:{port}', shell=True)
+
+
+def find_directories(path, id, file_matcher):
+    """ Locate and return the directories containing a certain file type: '*.txt'
+    for all text files, or 'requirements.txt', etc.
+    """
+
+    directories_raw = subprocess.run(f"find {path}/{id} -type f -name '{file_matcher}' | sed -E 's|/[^/]+$||' |sort -u", shell=True, capture_output=True)
+    directories = directories_raw.stdout.decode('utf-8').splitlines()
+
+    return directories
+
+
+setup_flask_apps('test-databases', '/Users/sarah/Rithm/assessments/r31')
+
+# find_directories('/Users/sarah/Rithm/assessments/r31', 'databases', 'requirements.txt')

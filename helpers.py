@@ -82,8 +82,8 @@ def handle_files(downloads_path, assessments_path, id):
     filenames.
     Find latest downloaded .zip file in Downloads directory, extract filename,
     move to assessments directory, unzip, rename unzipped file, delete .zip file,
-    search all downloaded student directories for .git and __MACOSX folders and
-    remove them.
+    search all downloaded student directories for commonly-found unneeded dirs
+    and files and remove them.
     """
 
     # find all .zip files in Downloads directory
@@ -177,19 +177,20 @@ def find_and_run_jasmine_tests(assessment_path, assessment_id):
 
     # look in the current assessment folder for all .html files.
     # Search those .html files recursively (-r) for the word (-w) "jasmine-core"
-    # jasmine-core is part of the CDN link and therefor is a good identifier for any
+    # jasmine-core is part of the CDN link and therefore is a good identifier for any
     # html file that will run jasmine tests
     # when and html file that contains the word "jasmine-core" is found,
     # output the name of that file (-l)
 
     # escape the curly braces needed for grep with more curly braces per Python f-string escape rules
     results = subprocess.run(
-        f'find {assessment_path}{assessment_id} -name "*.html" -exec grep -rlw "jasmine-core" {{}} \;',
+        f'find {assessment_path}/{assessment_id} -name "*.html" -exec grep -rlw "jasmine-core" {{}} \;',
         shell=True,
         capture_output=True
     )
 
     file_list = results.stdout.decode('utf-8').splitlines()
+
 
     # TODO: add line to link to Rithm solution test script to student html file so both
     # their tests and ours get run at once
@@ -206,3 +207,5 @@ def find_and_run_jasmine_tests(assessment_path, assessment_id):
     formatted_file_names = [str(file) for file in file_list]
 
     make_jasmine_report(formatted_file_names)
+
+# find_and_run_jasmine_tests('/Users/sarah/Rithm/assessments/r31', 'js-problem-solving')
