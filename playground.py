@@ -1,6 +1,7 @@
 ###### PLAYGROUND FILE FOR EXPERIMENTS AND RESEARCH ###########
 
 import os
+import glob
 # import glob
 import subprocess
 base_path = '/Users/sarah/Rithm/assessments/r31/flask-1'
@@ -106,7 +107,7 @@ def setup_jasmine_tests(assessment_id, assessments_path):
     # The below finds all files below the given directory that are regular files
     # (-type f) and have .test.js at the end of their name (-name '*.test.js').
     # Next, sed removes the file name, leaving just the directory name. Then, the
-    # list of directories is sorted (sort) and duplicates removed (uniq).
+    # list of directories is sorted (sort) and duplicates removed (-u).
     # The sed command consists of a single substitute. It looks for matches to the
     # regular expression /[^/]+$ and replaces anything matching that with nothing.
     # The dollar sign means the end of the line. [^/]+' means one or more characters
@@ -161,6 +162,10 @@ def setup_flask_apps(assessment_id, assessments_path):
     flask_directories = find_directories(assessments_path, assessment_id, 'requirements.txt')
     print(flask_directories)
 
+    if len(flask_directories) == 0:
+        print("no flask apps to run")
+        return
+
     for i, dir in enumerate(flask_directories):
         # create a unique server port for each project
         port = i + 5001
@@ -196,6 +201,40 @@ def find_directories(path, id, file_matcher):
     return directories
 
 
-setup_flask_apps('test-databases', '/Users/sarah/Rithm/assessments/r31')
+# setup_flask_apps('test-databases', '/Users/sarah/Rithm/assessments/r31')
 
 # find_directories('/Users/sarah/Rithm/assessments/r31', 'databases', 'requirements.txt')
+
+
+## The only test in our solutions that uses single quotes is scrambledPalindromeCheck.test.js
+# We should just update that test in the curriculum
+def replace_single_quotes(file_path):
+    """ Credit to chatGPT. **sigh** """
+
+    with open(file_path, 'r') as file:
+        content = file.read()
+
+    modified_content = ""
+    in_quotes = False
+
+    for char in content:
+        if char == "'" and not in_quotes:
+            in_quotes = True
+            modified_content += '"'
+        elif char == "'" and in_quotes:
+            in_quotes = False
+            modified_content += '"'
+        else:
+            modified_content += char
+
+    with open(file_path, 'w') as file:
+        file.write(modified_content)
+
+    print(f"Single quotes replaced with double quotes in {file_path}")
+
+
+# Usage example
+# replace_single_quotes('/Users/sarah/Rithm/assessments/r31/test/flask-1/steven-zheng/flask-1/rithm-scrambledPalindromeCheck.test.js')
+
+
+# find_files_and_directories('.', '', [('venv', 'd'), ('node_modules', 'd'), ('__pycache__', 'd')])

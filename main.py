@@ -5,10 +5,10 @@ from helpers import (
     handle_files,
     get_student_names,
     create_feedback_forms,
-    find_and_run_jasmine_tests)
+    find_format_run_jasmine_tests,
+    setup_flask_apps)
 from scrapers import get_zip_file
 
-# TODO: requirements.txt finder, if found, create venv, activate, install requirements, deactivate
 # TODO: scan for node modules, if found, install
 # TODO: run all types of test suites automatically (Jasmine nearly done)
 
@@ -20,7 +20,7 @@ def setup_grading():
     # determine os, usernames(s), and create downloads and assessments paths
     # base_assessments_path is like /Users/sarah/Rithm/assessments
     # assessments_path is like /Users/sarah/Rithm/assessments/r31
-    base_assessments_path, assessments_path, downloads_path = build_paths()
+    base_assessments_path, assessments_path, downloads_path, curric_path = build_paths()
 
     # user chooses assessment in terminal
     assessment_id = choose_assessment()
@@ -36,12 +36,17 @@ def setup_grading():
     # add feedback forms to newly created assessment directory
     create_feedback_forms(student_names, base_assessments_path, assessments_path, assessment_id)
 
+    breakpoint()
+
     # find any Jasmine tests and run them
-    find_and_run_jasmine_tests(assessments_path, assessment_id)
+    find_format_run_jasmine_tests(curric_path, assessments_path, assessment_id)
+
+    # find any Flask apps, start them up, and open in Chrome
+    setup_flask_apps(assessment_id, assessments_path, student_names)
 
     # open assessments in VSCode
     # code /Users/sarah/Rithm/assessments/r31/test/web-dev-1
-    os.system('code {0}{1}'.format(assessments_path, assessment_id))
+    os.system('code {0}/{1}'.format(assessments_path, assessment_id))
 
 setup_grading()
 

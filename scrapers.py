@@ -11,7 +11,7 @@ load_dotenv()
 LOGIN_USER = 'sarah'
 LOGIN_PW = os.environ.get('RITHM_STUDENTS_PW')
 CURRENT_COHORT = os.environ.get('RITHM_COHORT')
-ASSESSMENTS_URL = f'https://{CURRENT_COHORT}.students.rithmschool.com/assessments/'
+ASSESSMENTS_URL = f'https://{CURRENT_COHORT}.students.rithmschool.com/assessments'
 
 
 def get_zip_file(id):
@@ -27,7 +27,7 @@ def get_zip_file(id):
     driver = webdriver.Chrome()
 
     driver.get(ASSESSMENTS_URL)
-    time.sleep(3)
+    time.sleep(1)
 
     # locate username & password fields and login button
     username_input = '//*[@id="id_username"]'
@@ -45,14 +45,14 @@ def get_zip_file(id):
 
     driver.find_element(By.XPATH, assessment_link).click()
 
-    time.sleep(2)
+    time.sleep(1)
 
     # click claim & download button
     claim_and_download_button = '/html/body/div/form/h5/span/button[1]'
     driver.find_element(By.XPATH, claim_and_download_button).click()
 
     # wait for download to finish
-    time.sleep(5)
+    time.sleep(3)
 
     # Selenium now manages this automatically, but it's good practice to be explicit here
     driver.quit()
@@ -64,7 +64,7 @@ def make_jasmine_report(html_files):
      """
 
     driver = webdriver.Chrome()
-
+    print("\x1b[6;30;43mRUNNING JASMINE TESTS... \x1b[0m")
     for file in html_files:
         path = f'file://{file}'
         driver.get(path)
