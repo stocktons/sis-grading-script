@@ -160,7 +160,7 @@ def setup_flask_apps(assessment_id, assessments_path):
 
     # find all flask app directories
     flask_directories = find_directories(assessments_path, assessment_id, 'requirements.txt')
-    print(flask_directories)
+    # print(flask_directories)
 
     if len(flask_directories) == 0:
         print("no flask apps to run")
@@ -208,6 +208,7 @@ def find_directories(path, id, file_matcher):
 
 ## The only test in our solutions that uses single quotes is scrambledPalindromeCheck.test.js
 # We should just update that test in the curriculum
+# This isn't being used anywhere right now.
 def replace_single_quotes(file_path):
     """ Credit to chatGPT. **sigh** """
 

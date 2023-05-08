@@ -36,8 +36,6 @@ def setup_grading():
     # add feedback forms to newly created assessment directory
     create_feedback_forms(student_names, base_assessments_path, assessments_path, assessment_id)
 
-    breakpoint()
-
     # find any Jasmine tests and run them
     find_format_run_jasmine_tests(curric_path, assessments_path, assessment_id)
 

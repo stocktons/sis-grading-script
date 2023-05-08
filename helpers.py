@@ -88,7 +88,7 @@ def handle_files(downloads_path, assessments_path, id):
     search all downloaded student directories for commonly-found unneeded dirs
     and files and remove them.
     """
-
+    print("\x1b[6;30;43mSETTING UP DIRECTORIES & FILES... \x1b[0m")
     # print("handle_files", downloads_path, assessments_path, id)
     # find all .zip files in Downloads directory
     zipped_downloads = glob.glob(f'{downloads_path}/*.zip')
@@ -306,7 +306,6 @@ def setup_flask_apps(assessment_id, assessments_path, student_names):
     requirements.txt. Start Flask servers on sequentially-numbered ports
     and open Chrome at those addresses.
     """
-
     # print("setup_flask_apps", assessment_id, assessments_path, student_names)
 
     # find all flask app directories, as long as the student remembered to make a
@@ -319,6 +318,8 @@ def setup_flask_apps(assessment_id, assessments_path, student_names):
         print("no flask apps to run")
         return
 
+    print("\x1b[6;30;43mRUNNING FLASK APPS... \x1b[0m")
+
     # find students who forgot to include a requirements.txt and print a statement to the console
     if len(flask_directories) != len(student_names):
         for name in student_names:
@@ -328,7 +329,7 @@ def setup_flask_apps(assessment_id, assessments_path, student_names):
     for i, dir in enumerate(flask_directories):
         # create a unique server port for each project
         port = i + 5001
-        # print(port, dir)
+        print(f'\x1b[0;36;49mRunning {dir} on port {port}\x1b[0m')
 
         # There is an 'extra' deactivate and reactivate sequence because sometimes
         # the venv fails to recognize some freshly-installed packages otherwise
