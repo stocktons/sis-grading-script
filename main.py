@@ -6,7 +6,8 @@ from helpers import (
     get_student_names,
     create_feedback_forms,
     find_format_run_jasmine_tests,
-    setup_flask_apps)
+    setup_flask_apps,
+    install_node_modules)
 from scrapers import get_zip_file
 
 # TODO: scan for node modules, if found, install
@@ -41,6 +42,9 @@ def setup_grading():
 
     # find any Flask apps, start them up, and open in Chrome
     setup_flask_apps(assessment_id, assessments_path, student_names)
+
+    # search for package.json files, and if found, recursively install all node modules
+    install_node_modules(assessment_id, assessments_path)
 
     # open assessments in VSCode
     # code /Users/sarah/Rithm/assessments/r31/test/web-dev-1

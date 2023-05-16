@@ -2,6 +2,7 @@ import os
 import subprocess
 import inquirer
 import glob
+import sys
 from refs import ASSESSMENT_TO_XPATH_TR
 from scrapers import make_jasmine_report
 
@@ -54,7 +55,8 @@ def build_paths():
         curric_path = f'/home/{os_user}/rithm/rithm-apps/curric/assessments'
     elif os_name == 'mac':
         base_ass_path = f'/Users/{os_user}/Rithm/assessments'
-        ass_path = f'{base_ass_path}/{CURRENT_COHORT}/test'
+        # ass_path = f'{base_ass_path}/{CURRENT_COHORT}/test'
+        ass_path = f'{base_ass_path}/{CURRENT_COHORT}'
         downlds_path = f'/Users/{os_user}/Downloads'
         curric_path = f'/Users/{os_user}/Rithm/rithm-apps/curric/assessments'
     else:
@@ -274,7 +276,10 @@ def find_jasmine_tests(assessment_path, assessment_id):
 
     # put the filename in quotes in case the student put spaces in their path
     formatted_file_names = [str(file) for file in file_list]
+    print(formatted_file_names)
     return formatted_file_names
+
+# find_jasmine_tests("/Users/sarah/Rithm/assessments/r31", "flask-2")
 
 
 def find_format_run_jasmine_tests(curric_path, assessment_path, assessment_id):
@@ -298,6 +303,29 @@ def find_directories_with_sought_file_type(path, id, file_matcher):
     # print("directories with sought file type", directories)
 
     return directories
+
+def install_node_modules(assessment_id, assessments_path):
+    """ Search for package.json files in student submissions. If found,
+    recursively install all node modules. """
+
+    # find all directories that have a package.json file
+    node_module_directories = find_directories_with_sought_file_type(assessments_path, assessment_id, 'package.json')
+    print("node_module_directories: ", node_module_directories)
+
+    if node_module_directories == []:
+        print("no package.jsons found")
+        return
+
+    print("\x1b[6;30;43mINSTALLING NODE MODULES... \x1b[0m")
+
+    node_assessment_path = f'{assessments_path}/{assessment_id}'
+    command = f"""tell application "Terminal"
+                    activate
+                    tell application "System Events" to keystroke "t" using {{command down}}
+                    do script "cd '{node_assessment_path}'" in front window
+                    do script "npx recursive-install" in front window
+                end tell"""
+    subprocess.call(["osascript", "-e", command])
 
 
 def setup_flask_apps(assessment_id, assessments_path, student_names):
@@ -351,6 +379,8 @@ def setup_flask_apps(assessment_id, assessments_path, student_names):
         # and the server has started.
         subprocess.run(f'open http://localhost:{port}', shell=True)
 
+# setup_flask_apps("flask-2", "/Users/sarah/Rithm/assessments/r31", ["steven-zheng", "meeran-kim", "timothy-sukamtoh", "michael-herman", "russell-jones"])
+
 def find_files_and_directories(path, id, items_to_find):
     """ Finds all files and directories passed in.
     items_to_find is a list of tuples with the name of the file or directory,
@@ -383,8 +413,41 @@ def find_alert_and_remove_unwanted_items(path, id, items_to_find):
     unwanted_item_paths = find_files_and_directories(path, id, items_to_find)
 
     for path in unwanted_item_paths:
-        print(f'\x1b[6;30;41m***ALERT: found {path}. Removing from student directory.***\x1b[0m')
-        subprocess.run(f'rm -rf "{path}"', shell=True)
+        remove = query_yes_no(f'\x1b[6;30;41m***ALERT: found {path}. Remove from student directory?***\x1b[0m')
+        if remove:
+            print(f'\x1b[0;36;49m***{path} removed from student directory.***\x1b[0m')
+            subprocess.run(f'rm -rf "{path}"', shell=True)
 
 
 # find_alert_and_remove_unwanted_items('.', '', [('venv', 'd'), ('node_modules', 'd')])
+
+# credit: https://stackoverflow.com/questions/3041986/apt-command-line-interface-like-yes-no-input
+def query_yes_no(question, default="yes"):
+    """Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+            It must be "yes" (the default), "no" or None (meaning
+            an answer is required of the user).
+
+    The "answer" return value is True for "yes" or False for "no".
+    """
+    valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = input().lower()
+        if default is not None and choice == "":
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' " "(or 'y' or 'n').\n")

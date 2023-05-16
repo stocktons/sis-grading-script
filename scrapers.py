@@ -1,5 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
 # from helpers import CURRENT_COHORT
@@ -24,10 +26,9 @@ def get_zip_file(id):
     # ser = Service('/home/stocktons/chromedriver')
     # op = webdriver.ChromeOptions()
     # driver = webdriver.Chrome(service=ser, options=op)
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
     driver.get(ASSESSMENTS_URL)
-    time.sleep(1)
 
     # locate username & password fields and login button
     username_input = '//*[@id="id_username"]'
@@ -39,13 +40,18 @@ def get_zip_file(id):
     driver.find_element(By.XPATH, password_input).send_keys(LOGIN_PW)
     driver.find_element(By.XPATH, login_button).click()
 
-    # visit that assessment page
+    time.sleep(1)
+
+    # scroll to bottom of page so all links are visible
+    driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+    time.sleep(3)
+
+    # visit the desired assessment page
     assessment_link = ('/html/body/div/table/tbody/' +
                        f'tr[{ASSESSMENT_TO_XPATH_TR[id]}]/td[3]/div[1]/b/a')
-
     driver.find_element(By.XPATH, assessment_link).click()
 
-    time.sleep(1)
+    time.sleep(2)
 
     # click claim & download button
     claim_and_download_button = '/html/body/div/form/h5/span/button[1]'
@@ -57,13 +63,13 @@ def get_zip_file(id):
     # Selenium now manages this automatically, but it's good practice to be explicit here
     driver.quit()
 
-
+get_zip_file("node-express-1")
 def make_jasmine_report(html_files):
     """ Takes in a list of .html file paths, and opens them in Chrome to run the
      Jasmine tests. Checks results for each test, and prints synopsis to terminal.
      """
-
-    driver = webdriver.Chrome()
+    print("running tests")
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
     print("\x1b[6;30;43mRUNNING JASMINE TESTS... \x1b[0m")
     for file in html_files:
         path = f'file://{file}'
