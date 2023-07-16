@@ -4,8 +4,6 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
-# from helpers import CURRENT_COHORT
-from refs import ASSESSMENT_TO_XPATH_TR
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,6 +24,7 @@ def get_zip_file(id):
     # ser = Service('/home/stocktons/chromedriver')
     # op = webdriver.ChromeOptions()
     # driver = webdriver.Chrome(service=ser, options=op)
+    # Make sure latest version is installed
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
     driver.get(ASSESSMENTS_URL)
@@ -42,14 +41,8 @@ def get_zip_file(id):
 
     time.sleep(1)
 
-    # scroll to bottom of page so all links are visible
-    driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
-    time.sleep(3)
-
-    # visit the desired assessment page
-    assessment_link = ('/html/body/div/table/tbody/' +
-                       f'tr[{ASSESSMENT_TO_XPATH_TR[id]}]/td[3]/div[1]/b/a')
-    driver.find_element(By.XPATH, assessment_link).click()
+    # go to assessment url
+    driver.get(f'{ASSESSMENTS_URL}/{id}')
 
     time.sleep(2)
 
@@ -63,7 +56,6 @@ def get_zip_file(id):
     # Selenium now manages this automatically, but it's good practice to be explicit here
     driver.quit()
 
-get_zip_file("node-express-1")
 def make_jasmine_report(html_files):
     """ Takes in a list of .html file paths, and opens them in Chrome to run the
      Jasmine tests. Checks results for each test, and prints synopsis to terminal.

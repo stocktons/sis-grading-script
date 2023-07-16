@@ -49,22 +49,34 @@ def build_paths():
     # windows_username = system_data.get('windows_username')
 
     if os_name == 'linux':
-        base_ass_path = f'/home/{os_user}/rithm/assessments'
-        ass_path = f'{base_ass_path}/{CURRENT_COHORT}'
-        downlds_path = f'/home/{os_user}/Downloads'
+        base_assessments_path = f'/home/{os_user}/rithm/assessments'
+
+        # leave this line here for easy testing:
+        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
+
+        # real path for in-cohort use:
+        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
+
+        downloads_path = f'/home/{os_user}/Downloads'
         curric_path = f'/home/{os_user}/rithm/rithm-apps/curric/assessments'
+
     elif os_name == 'mac':
-        base_ass_path = f'/Users/{os_user}/Rithm/assessments'
-        # ass_path = f'{base_ass_path}/{CURRENT_COHORT}/test'
-        ass_path = f'{base_ass_path}/{CURRENT_COHORT}'
-        downlds_path = f'/Users/{os_user}/Downloads'
+        base_assessments_path = f'/Users/{os_user}/Rithm/assessments'
+
+        # leave this line here for easy testing:
+        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
+
+        # real path for in-cohort use:
+        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
+
+        downloads_path = f'/Users/{os_user}/Downloads'
         curric_path = f'/Users/{os_user}/Rithm/rithm-apps/curric/assessments'
     else:
         raise ValueError(
             "Only MacOS and WSL/Linux here, please. Take your fancypants OS elsewhere."
         )
 
-    return (base_ass_path, ass_path, downlds_path, curric_path)
+    return (base_assessments_path, assessments_path, downloads_path, curric_path)
 
 def choose_assessment():
     """ Display a list of assessments in the terminal for the user to choose from.
@@ -123,7 +135,7 @@ def handle_files(downloads_path, assessments_path, id):
     # remove commonly-found unneeded files and directories
     os.system('rm -rf $(find {0}/{1} -type d -name __MACOSX)'.format(assessments_path, id))
     os.system('rm -rf $(find {0}/{1} -type d -name .vscode)'.format(assessments_path, id))
-    find_alert_and_remove_unwanted_items(assessments_path, id, [('.git', 'd'), ('venv', 'd'), ('node_modules', 'd')])
+    find_alert_and_remove_unwanted_items(assessments_path, id, [('.git', 'd'), ('venv', 'd'), ('node_modules', 'd'), ('.DS_Store', 'd')])
     # os.system('rm -rf $(find {0}/{1} -type d -name .git)'.format(assessments_path, id))
 
 
@@ -395,12 +407,15 @@ def find_files_and_directories(path, id, items_to_find):
     """
     found_files = []
     for item, type in items_to_find:
+        print(f'finding all {item} directories...')
         raw_out = subprocess.run(f"find {path}/{id} -type {type} -name {item}", shell=True, capture_output=True)
         output_list = raw_out.stdout.decode('utf-8').splitlines()
-        # print("output_list", output_list)
-        if output_list != []:
-            # only top-level directories that match the sought-for name
-            found_files.append(output_list[0])
+        found_files += output_list
+        # I don't remember why I had this here, but it will only grab one student with
+        # forgotten .git, when we want all of them in the output list
+        # if output_list != []:
+        #     # only top-level directories that match the sought-for name
+        #     found_files.append(output_list[0])
 
     return found_files
 
@@ -411,6 +426,7 @@ def find_alert_and_remove_unwanted_items(path, id, items_to_find):
     """
 
     unwanted_item_paths = find_files_and_directories(path, id, items_to_find)
+    print("all (?) unwanted items", unwanted_item_paths)
 
     for path in unwanted_item_paths:
         remove = query_yes_no(f'\x1b[6;30;41m***ALERT: found {path}. Remove from student directory?***\x1b[0m')
