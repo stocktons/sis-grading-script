@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+
+
 LOGIN_USER = 'sarah'
 LOGIN_PW = os.environ.get('RITHM_STUDENTS_PW')
 CURRENT_COHORT = os.environ.get('RITHM_COHORT')
@@ -20,13 +23,29 @@ def get_zip_file(id):
     click "Claim & Download" button.
     """
 
+
+
+
+#####
+# Auto-update broke 7/23, workaround from https://github.com/GoogleChromeLabs/chrome-for-testing/issues/30#issuecomment-1643741069
+# ChromeOptions options = new ChromeOptions();
+# options.setBinary("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+# WebDriver driver = new ChromeDriver(options);
+#####
+
     # used to need these, seems like it works now without
     # ser = Service('/home/stocktons/chromedriver')
-    # op = webdriver.ChromeOptions()
-    # driver = webdriver.Chrome(service=ser, options=op)
-    # Make sure latest version is installed
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    ## old code, uncommented for 7/23 bug:
+    op = webdriver.ChromeOptions()
 
+    ## new code, adapted for 7/23 bug:
+    ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver")
+
+    driver = webdriver.Chrome(service=ser, options=op)
+    # Make sure latest version is installed
+    # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+    print("MADE IT PAST DRIVER", driver)
     driver.get(ASSESSMENTS_URL)
 
     # locate username & password fields and login button
@@ -61,7 +80,15 @@ def make_jasmine_report(html_files):
      Jasmine tests. Checks results for each test, and prints synopsis to terminal.
      """
     print("running tests")
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+        ## old code, uncommented for 7/23 bug:
+    op = webdriver.ChromeOptions()
+
+    ## new code, adapted for 7/23 bug:
+    ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver")
+
+    driver = webdriver.Chrome(service=ser, options=op)
+    # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
     print("\x1b[6;30;43mRUNNING JASMINE TESTS... \x1b[0m")
     for file in html_files:
         path = f'file://{file}'

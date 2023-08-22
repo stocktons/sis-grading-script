@@ -291,7 +291,7 @@ def find_jasmine_tests(assessment_path, assessment_id):
     print(formatted_file_names)
     return formatted_file_names
 
-# find_jasmine_tests("/Users/sarah/Rithm/assessments/r31", "flask-2")
+# find_jasmine_tests("/Users/sarah/Rithm/assessments/r31/test", "js-problem-solving")
 
 
 def find_format_run_jasmine_tests(curric_path, assessment_path, assessment_id):
@@ -299,11 +299,12 @@ def find_format_run_jasmine_tests(curric_path, assessment_path, assessment_id):
     # find .html files with Jasmine tests in each student directory
     # make jasmine report - open all .html files in chrome and scrape results
     # print("find_format_run_jasmine_tests", curric_path, assessment_path, assessment_id )
-    if setup_jasmine_tests(curric_path, assessment_path, assessment_id) is False:
-        return
+    # if setup_jasmine_tests(curric_path, assessment_path, assessment_id) is False:
+    #     return
     html_files = find_jasmine_tests(assessment_path, assessment_id)
     make_jasmine_report(html_files)
 
+# find_format_run_jasmine_tests("", "/Users/sarah/Rithm/assessments/r31/test", "js-problem-solving")
 
 def find_directories_with_sought_file_type(path, id, file_matcher):
     """ Locate and return the directories containing a certain file type: '*.txt'
