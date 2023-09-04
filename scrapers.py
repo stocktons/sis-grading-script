@@ -36,14 +36,14 @@ def get_zip_file(id):
     # used to need these, seems like it works now without
     # ser = Service('/home/stocktons/chromedriver')
     ## old code, uncommented for 7/23 bug:
-    op = webdriver.ChromeOptions()
+    # op = webdriver.ChromeOptions()
 
     ## new code, adapted for 7/23 bug:
-    ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver")
+    # ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver")
 
-    driver = webdriver.Chrome(service=ser, options=op)
+    # driver = webdriver.Chrome(service=ser, options=op)
     # Make sure latest version is installed
-    # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
     print("MADE IT PAST DRIVER", driver)
     driver.get(ASSESSMENTS_URL)
@@ -82,13 +82,13 @@ def make_jasmine_report(html_files):
     print("running tests")
 
         ## old code, uncommented for 7/23 bug:
-    op = webdriver.ChromeOptions()
+    # op = webdriver.ChromeOptions()
 
     ## new code, adapted for 7/23 bug:
-    ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver")
+    # ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver")
 
-    driver = webdriver.Chrome(service=ser, options=op)
-    # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    # driver = webdriver.Chrome(service=ser, options=op)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
     print("\x1b[6;30;43mRUNNING JASMINE TESTS... \x1b[0m")
     for file in html_files:
         path = f'file://{file}'
