@@ -192,7 +192,7 @@ def get_zip_file(id):
     op = webdriver.ChromeOptions()
 
     ## new code, adapted for 7/23 bug:
-    ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver-119.0.6045.123")
+    ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver")
 
     driver = webdriver.Chrome(service=ser, options=op)
     # Make sure latest version is installed
