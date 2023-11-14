@@ -7,7 +7,8 @@ from refs import ASSESSMENT_TO_XPATH_TR
 from scrapers import make_jasmine_report
 
 CURRENT_COHORT = os.environ.get('RITHM_COHORT')
-PREVIOUS_COHORT = 'r29'
+PREVIOUS_COHORT = 'r31'
+
 
 def determine_os_and_find_username():
     """Ask the current OS what it is, find the current user's name(s) to determine
@@ -26,18 +27,23 @@ def determine_os_and_find_username():
         # Grab "stocktons"
         linux_username = linux_username_data.stdout.decode('utf-8').strip()
         # Windows truncates the Linux username to 5 characters for its filepaths
-        windows_username = linux_username[:5] # "stock"
+        windows_username = linux_username[:5]  # "stock"
 
-        return {'os': 'linux', 'username': linux_username, 'windows_username': windows_username}
+        return {
+            'os': 'linux',
+            'username': linux_username,
+            'windows_username': windows_username
+        }
 
     if os_name == "Darwin":
         # mac_username_data will be like:
         # CompletedProcess(args=['id', '-un'], returncode=0, stdout=b'sarah\n', stderr=b'')
-        mac_username_data= subprocess.run(['id', '-un'], capture_output=True)
+        mac_username_data = subprocess.run(['id', '-un'], capture_output=True)
         # grab "sarah". not like that. ugh...
         mac_username = mac_username_data.stdout.decode('utf-8').strip()
 
         return {'os': 'mac', 'username': mac_username}
+
 
 def build_paths():
     """ """
@@ -52,10 +58,10 @@ def build_paths():
         base_assessments_path = f'/home/{os_user}/rithm/assessments'
 
         # leave this line here for easy testing:
-        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
+        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
 
         # real path for in-cohort use:
-        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
+        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
 
         downloads_path = f'/home/{os_user}/Downloads'
         curric_path = f'/home/{os_user}/rithm/rithm-apps/curric/assessments'
@@ -64,10 +70,10 @@ def build_paths():
         base_assessments_path = f'/Users/{os_user}/Rithm/assessments'
 
         # leave this line here for easy testing:
-        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
+        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
 
         # real path for in-cohort use:
-        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
+        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
 
         downloads_path = f'/Users/{os_user}/Downloads'
         curric_path = f'/Users/{os_user}/Rithm/rithm-apps/curric/assessments'
@@ -77,6 +83,7 @@ def build_paths():
         )
 
     return (base_assessments_path, assessments_path, downloads_path, curric_path)
+
 
 def choose_assessment():
     """ Display a list of assessments in the terminal for the user to choose from.
@@ -92,6 +99,7 @@ def choose_assessment():
 
     answers = inquirer.prompt(questions)
     return answers['assessment']
+
 
 def handle_files(downloads_path, assessments_path, id):
     """ Takes in path to downloads directory, path to assessments directory,
@@ -159,6 +167,7 @@ def get_student_names(assessments_path, id):
 
     return student_names
 
+
 def create_feedback_forms(student_names, base_assessments_path, assessments_path, id):
     """ Takes in chosen assessment id (like 'web-dev-2') to use to create new
     filenames.
@@ -188,6 +197,7 @@ def create_feedback_forms(student_names, base_assessments_path, assessments_path
         .format(base_assessments_path, PREVIOUS_COHORT, id, assessments_path)
     )
 
+
 def setup_jasmine_tests(curric_path, assessments_path, assessment_id):
     """ Takes in:
      - assessment id like 'web-dev-2',
@@ -210,7 +220,7 @@ def setup_jasmine_tests(curric_path, assessments_path, assessment_id):
     results = subprocess.run(f'find {curric_path}/{assessment_id}/solution -name "*.test.js"', shell=True, capture_output=True)
     file_list = results.stdout.decode('utf-8').splitlines()
     # print("path", f"{curric_path}/{assessment_id}/solution")
-    # print("files", file_list)
+    print("files", file_list)
     if len(file_list) == 0:
         print("no jasmine tests to run")
         return False
@@ -299,8 +309,8 @@ def find_format_run_jasmine_tests(curric_path, assessment_path, assessment_id):
     # find .html files with Jasmine tests in each student directory
     # make jasmine report - open all .html files in chrome and scrape results
     # print("find_format_run_jasmine_tests", curric_path, assessment_path, assessment_id )
-    # if setup_jasmine_tests(curric_path, assessment_path, assessment_id) is False:
-    #     return
+    if setup_jasmine_tests(curric_path, assessment_path, assessment_id) is False:
+        return
     html_files = find_jasmine_tests(assessment_path, assessment_id)
     make_jasmine_report(html_files)
 

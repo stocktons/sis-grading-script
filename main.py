@@ -10,6 +10,7 @@ from helpers import (
     install_node_modules)
 from scrapers import get_zip_file
 
+
 # TODO: scan for node modules, if found, install
 # TODO: run all types of test suites automatically (Jasmine nearly done)
 
@@ -50,6 +51,5 @@ def setup_grading():
     # code /Users/sarah/Rithm/assessments/r31/test/web-dev-1
     os.system('code {0}/{1}'.format(assessments_path, assessment_id))
 
+
 setup_grading()
-
-
