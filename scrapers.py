@@ -2,10 +2,12 @@ import time
 import os
 import requests
 import subprocess
+import threading
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import NoSuchDriverException, WebDriverException
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,11 +15,17 @@ load_dotenv()
 LOGIN_USER = os.environ.get("SIS_USERNAME")
 LOGIN_PW = os.environ.get('RITHM_STUDENTS_PW')
 CURRENT_COHORT = os.environ.get('RITHM_COHORT')
-ASSESSMENTS_URL = f'https://{CURRENT_COHORT}.students.rithmschool.com/assessments'
-CHROMEDRIVER_API = "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json"
+ASSESSMENTS_URL = (
+    f'https://{CURRENT_COHORT}.students.rithmschool.com/assessments')
+CHROMEDRIVER_API = (
+    "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json")
 
-def split_version(v):  # 116.0.5845.187
-    # FIXME: think about how to search for the version in the data better
+
+def split_version(v):
+    """Takes in a string of a version number like '116.0.5845.187', and returns
+    a tuple like ('116.0.5845', '187').
+    """
+
     version_number_split = v.split(".")
     version_number_start = version_number_split[:3]
     version_number_end = version_number_split[-1]
@@ -26,6 +34,7 @@ def split_version(v):  # 116.0.5845.187
     v_end_str = str(version_number_end)
     # print(v_start_str, v_end_str)  # 116.0.5845 187
     return v_start_str, v_end_str
+
 
 def get_chrome_version():
     full_version_name = subprocess.run(
@@ -107,7 +116,7 @@ def get_chromedriver_url():
     for version_info in chromedriver_data["versions"]:
         # breakpoint()
         v_start, v_end = split_version(version_info["version"])
-        if v_start == target_version_start and v_end < target_version_end:
+        if v_start == target_version_start and v_end <= target_version_end:
             breakpoint()
             # Found the version, now search for the "platform" in "chromedriver"
             for driver_info in version_info["downloads"]["chromedriver"]:
@@ -147,7 +156,7 @@ def download_chromedriver(chunk_size=128):
     os.system(f"rm -rf ~/Projects/sis-grading-script/chromedriver-mac-arm64")
     os.system(f"rm -rf ~/Projects/sis-grading-script/{output_path}")
 
-download_chromedriver()
+# download_chromedriver()
 
 
 def initialize_selenium():
@@ -194,10 +203,20 @@ def get_zip_file(id):
     ## new code, adapted for 7/23 bug:
     ser = Service("/Users/sarah/Projects/sis-grading-script/chromedriver")
 
-    driver = webdriver.Chrome(service=ser, options=op)
+    try:
+        driver = webdriver.Chrome(service=ser, options=op)
+    except (NoSuchDriverException, WebDriverException):
+        print("\x1b[6;30;43mdownloading new chromedriver, please wait \x1b[0m")
+        thread = threading.Thread(target=download_chromedriver)
+        thread.start()
+        # wait here for the download to be complete before continuing
+        thread.join()
+        driver = webdriver.Chrome(service=ser, options=op)
+
+
     # Make sure latest version is installed
     # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-
+    breakpoint()
     print("MADE IT PAST DRIVER", driver)
     driver.get(ASSESSMENTS_URL)
 
@@ -207,7 +226,21 @@ def get_zip_file(id):
     login_button = '/html/body/div/div/form/div[3]/button'
 
     # fill out fields and click login
-    driver.find_element(By.XPATH, username_input).send_keys(LOGIN_USER)
+
+    # FIXME: THIS WONT WORK BECAUSE DRIVER IS ALREADY INITIALIZED AND CANT REPLACE IT
+    # Just make the program download a fresh driver preemptively every time
+    try:
+        driver.find_element(By.XPATH, username_input).send_keys(LOGIN_USER)
+    except (WebDriverException):
+        print("\x1b[6;30;43mdownloading new chromedriver, please wait \x1b[0m")
+        thread = threading.Thread(target=download_chromedriver)
+        thread.start()
+        # wait here for the download to be complete before continuing
+        thread.join()
+        driver = webdriver.Chrome(service=ser, options=op)
+        breakpoint()
+        driver.find_element(By.XPATH, username_input).send_keys(LOGIN_USER)
+
     driver.find_element(By.XPATH, password_input).send_keys(LOGIN_PW)
     driver.find_element(By.XPATH, login_button).click()
 

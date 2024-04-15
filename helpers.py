@@ -11,9 +11,10 @@ PREVIOUS_COHORT = 'r31'
 
 
 def determine_os_and_find_username():
-    """Ask the current OS what it is, find the current user's name(s) to determine
-    whether to use file paths for WSL or for MacOS. Returns tuple of one or two
-    usernames, depending on OS.
+    """
+    Ask the current OS what it is, find the current user's name(s) to
+    determine whether to use file paths for WSL or for MacOS.
+    Returns tuple of one or two usernames, depending on OS.
     """
     # print("determine_os_and_find_username")
     # Will be "Darwin" for MacOS and "Linux" for WSL/Linux
@@ -22,11 +23,17 @@ def determine_os_and_find_username():
 
     if os_name == "Linux":
         # linux_username_data will be like:
-        # CompletedProcess(args=['whoami'], returncode=0, stdout=b'stocktons\n', stderr=b'')
+        # CompletedProcess(
+        #   args=['whoami'],
+        #   returncode=0,
+        #   stdout=b'stocktons\n',
+        #   stderr=b''
+        # )
         linux_username_data = subprocess.run(['whoami'], capture_output=True)
         # Grab "stocktons"
         linux_username = linux_username_data.stdout.decode('utf-8').strip()
-        # Windows truncates the Linux username to 5 characters for its filepaths
+        # Windows truncates the Linux username to 5 characters for
+        # its filepaths
         windows_username = linux_username[:5]  # "stock"
 
         return {
@@ -37,7 +44,12 @@ def determine_os_and_find_username():
 
     if os_name == "Darwin":
         # mac_username_data will be like:
-        # CompletedProcess(args=['id', '-un'], returncode=0, stdout=b'sarah\n', stderr=b'')
+        # CompletedProcess(
+        #   args=['id', '-un'],
+        #   returncode=0,
+        #   stdout=b'sarah\n',
+        #   stderr=b''
+        # )
         mac_username_data = subprocess.run(['id', '-un'], capture_output=True)
         # grab "sarah". not like that. ugh...
         mac_username = mac_username_data.stdout.decode('utf-8').strip()
@@ -70,19 +82,25 @@ def build_paths():
         base_assessments_path = f'/Users/{os_user}/Rithm/assessments'
 
         # leave this line here for easy testing:
-        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
+        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
 
         # real path for in-cohort use:
-        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
+        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
 
         downloads_path = f'/Users/{os_user}/Downloads'
         curric_path = f'/Users/{os_user}/Rithm/rithm-apps/curric/assessments'
     else:
         raise ValueError(
-            "Only MacOS and WSL/Linux here, please. Take your fancypants OS elsewhere."
+            "Only MacOS and WSL/Linux here, please. "
+            "Take your fancypants OS elsewhere."
         )
 
-    return (base_assessments_path, assessments_path, downloads_path, curric_path)
+    return (
+        base_assessments_path,
+        assessments_path,
+        downloads_path,
+        curric_path
+    )
 
 
 def choose_assessment():
@@ -91,9 +109,10 @@ def choose_assessment():
     """
     # print("choose_assessment")
     questions = [
-        inquirer.List('assessment',
-                message='Choose an assessment',
-                choices=list(ASSESSMENT_TO_XPATH_TR.keys()),
+        inquirer.List(
+            'assessment',
+            message='Choose an assessment',
+            choices=list(ASSESSMENT_TO_XPATH_TR.keys()),
         ),
     ]
 
@@ -128,27 +147,36 @@ def handle_files(downloads_path, assessments_path, id):
     zipped_filename = latest_zipped_download[filename_start_index:]
     safe_zipped_filename = f"'{zipped_filename}'"
 
-    # os.system doesn't like f-strings, so use .format instead TODO: I don't think
-    # that's actually accurate, seems to be working in other places now. Refactor
-    # because .format() is annoying
     # move downloaded .zip file from downloads directory to assessments directory
-    os.system('mv {0} {1}'.format(safe_path_lzd, assessments_path))
+    os.system(f"mv {safe_path_lzd} {assessments_path}")
 
     # unzip downloaded .zip file. -qq flag suppresses output from command
-    os.system('unzip -qq {0}/{1} -d {0}'.format(assessments_path, safe_zipped_filename))
+    os.system((
+        f"unzip -qq {assessments_path}/{safe_zipped_filename}"
+        f" -d {assessments_path}"
+    ))
 
     # remove now unneeded .zip file
-    os.system('rm -rf {0}/{1}'.format(assessments_path, safe_zipped_filename))
+    os.system(f"rm -rf {assessments_path}/{safe_zipped_filename}")
 
     # remove commonly-found unneeded files and directories
-    os.system('rm -rf $(find {0}/{1} -type d -name __MACOSX)'.format(assessments_path, id))
-    os.system('rm -rf $(find {0}/{1} -type d -name .vscode)'.format(assessments_path, id))
-    find_alert_and_remove_unwanted_items(assessments_path, id, [('.git', 'd'), ('venv', 'd'), ('node_modules', 'd'), ('.DS_Store', 'd')])
-    # os.system('rm -rf $(find {0}/{1} -type d -name .git)'.format(assessments_path, id))
+    os.system("rm -rf $(find {assessments_path}/{id} -type d -name __MACOSX)")
+    os.system("rm -rf $(find {assessments_path}/{id} -type d -name .vscode)")
+    find_alert_and_remove_unwanted_items(
+        assessments_path,
+        id,
+        [
+         ('.git', 'd'),
+         ('venv', 'd'),
+         ('node_modules', 'd'),
+         ('.DS_Store', 'd')
+        ]
+    )
 
 
 def get_student_names(assessments_path, id):
-    """ Takes in the path to a particular cohort's assessments folder and an
+    """
+    Takes in the path to a particular cohort's assessments folder and an
     assessment id. Generates a list of student names like:
     ['first-last1', 'first-last2', 'first-last3'].
     NOTE: This is very naïve and only works as expected if this is run on a
@@ -159,7 +187,10 @@ def get_student_names(assessments_path, id):
     # Pull student names from downloaded files. Files are
     # named according to students, and will be captured in a bytestring like
     #  'b"first1-last1\nfirst2-last2\n"'
-    file_list_output = subprocess.run(['ls', f'{assessments_path}/{id}'], capture_output=True)
+    file_list_output = subprocess.run(
+        ['ls', f'{assessments_path}/{id}'],
+        capture_output=True
+    )
 
     # take the raw output from above, pull out the stdout, convert to a standard
     # string and split into a list on newlines
@@ -168,46 +199,54 @@ def get_student_names(assessments_path, id):
     return student_names
 
 
-def create_feedback_forms(student_names, base_assessments_path, assessments_path, id):
-    """ Takes in chosen assessment id (like 'web-dev-2') to use to create new
+def create_feedback_forms(
+        student_names,
+        base_assessments_path,
+        assessments_path,
+        id):
+    """
+    Takes in chosen assessment id (like 'web-dev-2') to use to create new
     filenames.
-    Find blank feedback template from previous cohort and copy to current assessment
-    directory.
-    Search all files, create new feedback filenames from student assessment directory
-    names.
+    Find blank feedback template from previous cohort and copy to current
+    assessment directory.
+    Search all files, create new feedback filenames from student assessment
+    directory names.
     Create new blank individualized feedback forms.
     """
-    # print("create_feedback_forms", student_names, base_assessments_path, assessments_path, id)
-    feedback_filenames = [f'{name}-feedback.md' for name in student_names]
+
+    feedback_filenames = [f"{name}-feedback.md" for name in student_names]
 
     for filename in feedback_filenames:
-        # copy blank feedback.md from previous cohort to new blank, personalized
-        # feedback.md for each student, like first-last-feedback.md
-        os.system(
-            ('cp {0}/{1}/{2}/feedback.md ' +
-            '{3}/{2}/{4}')
-            .format(base_assessments_path, PREVIOUS_COHORT, id, assessments_path, filename)
-        )
+        # copy blank feedback.md from previous cohort to new blank,
+        # personalized feedback.md for each student,
+        # like: first-last-feedback.md
+        os.system((
+            f"cp {base_assessments_path}/{PREVIOUS_COHORT}/{id}/feedback.md "
+            f"{assessments_path}/{id}/{filename}"
+        ))
 
     # also copy blank feedback.md from previous cohort to new blank feedback.md
     # for use next time and to facilitate blanket changes in this grading cycle
-    os.system(
-        ('cp {0}/{1}/{2}/feedback.md ' +
-        '{3}/{2}')
-        .format(base_assessments_path, PREVIOUS_COHORT, id, assessments_path)
-    )
+    os.system((
+        f"cp {base_assessments_path}/{PREVIOUS_COHORT}/{id}/feedback.md "
+        f"{assessments_path}/{id}"
+    ))
 
 
 def setup_jasmine_tests(curric_path, assessments_path, assessment_id):
-    """ Takes in:
-     - assessment id like 'web-dev-2',
-     - the path to the current cohort's assessments, like '/Users/sarah/Rithm/assessments/r31'
+    """
+    Takes in:
+     - assessment id like: 'web-dev-2',
+     - the path to the current cohort's assessments, like:
+     '/Users/sarah/Rithm/assessments/r31'
 
     Finds all Jasmine tests in the solution folder of the current assessment.
 
-    If no Jasmine tests found, returns False and aborts further Jasmine-test-related actions.
+    If no Jasmine tests found, returns False and aborts further
+    Jasmine-test-related actions.
 
-    Otherwise, finds the name of the directory students have stored their Jasmine tests.
+    Otherwise, finds the name of the directory students have stored
+    their Jasmine tests.
     Copies the Rithm solution tests to their directory.
     Renames the "it" or "test" statements in the Rithm solution copy to be like
     'it("rithm test: sorts the array correctly"...' to differentiate whether it's
