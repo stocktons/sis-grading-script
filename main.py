@@ -5,7 +5,6 @@ from helpers import (
     handle_files,
     get_student_names,
     create_feedback_forms,
-    find_format_run_jasmine_tests,
     setup_flask_apps,
     install_node_modules)
 from scrapers import get_zip_file
@@ -39,7 +38,7 @@ def setup_grading():
     create_feedback_forms(student_names, base_assessments_path, assessments_path, assessment_id)
 
     # find any Jasmine tests and run them
-    find_format_run_jasmine_tests(curric_path, assessments_path, assessment_id)
+    # find_format_run_jasmine_tests(curric_path, assessments_path, assessment_id)
 
     # find any Flask apps, start them up, and open in Chrome
     setup_flask_apps(assessment_id, assessments_path, student_names)

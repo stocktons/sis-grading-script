@@ -4,10 +4,9 @@ import inquirer
 import glob
 import sys
 from refs import ASSESSMENT_TO_XPATH_TR
-from scrapers import make_jasmine_report
 
 CURRENT_COHORT = os.environ.get('RITHM_COHORT')
-PREVIOUS_COHORT = 'r31'
+PREVIOUS_COHORT = 'r34'
 
 
 def determine_os_and_find_username():
@@ -82,10 +81,10 @@ def build_paths():
         base_assessments_path = f'/Users/{os_user}/Rithm/assessments'
 
         # leave this line here for easy testing:
-        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
+        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}/test'
 
         # real path for in-cohort use:
-        # assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
+        assessments_path = f'{base_assessments_path}/{CURRENT_COHORT}'
 
         downloads_path = f'/Users/{os_user}/Downloads'
         curric_path = f'/Users/{os_user}/Rithm/rithm-apps/curric/assessments'
@@ -160,8 +159,8 @@ def handle_files(downloads_path, assessments_path, id):
     os.system(f"rm -rf {assessments_path}/{safe_zipped_filename}")
 
     # remove commonly-found unneeded files and directories
-    os.system("rm -rf $(find {assessments_path}/{id} -type d -name __MACOSX)")
-    os.system("rm -rf $(find {assessments_path}/{id} -type d -name .vscode)")
+    os.system(f"rm -rf $(find {assessments_path}/{id} -type d -name __MACOSX)")
+    os.system(f"rm -rf $(find {assessments_path}/{id} -type d -name .vscode)")
     find_alert_and_remove_unwanted_items(
         assessments_path,
         id,
@@ -233,36 +232,36 @@ def create_feedback_forms(
     ))
 
 
-def setup_jasmine_tests(curric_path, assessments_path, assessment_id):
-    """
-    Takes in:
-     - assessment id like: 'web-dev-2',
-     - the path to the current cohort's assessments, like:
-     '/Users/sarah/Rithm/assessments/r31'
+# def setup_jasmine_tests(curric_path, assessments_path, assessment_id):
+#     """
+#     Takes in:
+#      - assessment id like: 'web-dev-2',
+#      - the path to the current cohort's assessments, like:
+#      '/Users/sarah/Rithm/assessments/r31'
 
-    Finds all Jasmine tests in the solution folder of the current assessment.
+#     Finds all Jasmine tests in the solution folder of the current assessment.
 
-    If no Jasmine tests found, returns False and aborts further
-    Jasmine-test-related actions.
+#     If no Jasmine tests found, returns False and aborts further
+#     Jasmine-test-related actions.
 
-    Otherwise, finds the name of the directory students have stored
-    their Jasmine tests.
-    Copies the Rithm solution tests to their directory.
-    Renames the "it" or "test" statements in the Rithm solution copy to be like
-    'it("rithm test: sorts the array correctly"...' to differentiate whether it's
-    a Rithm test or a student test that fails in the final printout.
-    Adds a <script> tag linking to the Rithm solution copy to the bottom of their .html file.
-    """
-    # print("setup_jasmine_tests", curric_path, assessment_id, assessments_path )
+#     Otherwise, finds the name of the directory students have stored
+#     their Jasmine tests.
+#     Copies the Rithm solution tests to their directory.
+#     Renames the "it" or "test" statements in the Rithm solution copy to be like
+#     'it("rithm test: sorts the array correctly"...' to differentiate whether it's
+#     a Rithm test or a student test that fails in the final printout.
+#     Adds a <script> tag linking to the Rithm solution copy to the bottom of their .html file.
+#     """
+#     # print("setup_jasmine_tests", curric_path, assessment_id, assessments_path )
 
-    # find all *.test.js in curric solution
-    results = subprocess.run(f'find {curric_path}/{assessment_id}/solution -name "*.test.js"', shell=True, capture_output=True)
-    file_list = results.stdout.decode('utf-8').splitlines()
-    # print("path", f"{curric_path}/{assessment_id}/solution")
-    print("files", file_list)
-    if len(file_list) == 0:
-        print("no jasmine tests to run")
-        return False
+#     # find all *.test.js in curric solution
+#     results = subprocess.run(f'find {curric_path}/{assessment_id}/solution -name "*.test.js"', shell=True, capture_output=True)
+#     file_list = results.stdout.decode('utf-8').splitlines()
+#     # print("path", f"{curric_path}/{assessment_id}/solution")
+#     print("files", file_list)
+#     if len(file_list) == 0:
+#         print("no jasmine tests to run")
+#         return False
 
     # find the name of the folder that has .test.js files for each student
     # https://unix.stackexchange.com/questions/111949/get-list-of-subdirectories-which-contain-a-file-whose-name-contains-a-string
@@ -280,80 +279,80 @@ def setup_jasmine_tests(curric_path, assessments_path, assessment_id):
     # replace -E with -r for non-Mac
     # NEED to make them raw strings with r"...". Can combine with f-string like fr"..."
 
-    test_directories_raw = subprocess.run(f"find {assessments_path}/{assessment_id} -type f -name '*.test.js' | sed -E 's|/[^/]+$||' |sort -u", shell=True, capture_output=True)
-    test_directories = test_directories_raw.stdout.decode('utf-8').splitlines()
-    # print("TEST DIRECTORIES", test_directories)
+    # test_directories_raw = subprocess.run(f"find {assessments_path}/{assessment_id} -type f -name '*.test.js' | sed -E 's|/[^/]+$||' |sort -u", shell=True, capture_output=True)
+    # test_directories = test_directories_raw.stdout.decode('utf-8').splitlines()
+    # # print("TEST DIRECTORIES", test_directories)
 
-    # dir: /Users/sarah/Rithm/assessments/r31/test-web-dev-1/student-name/web-dev-1
-    for dir in test_directories:
+    # # dir: /Users/sarah/Rithm/assessments/r31/test-web-dev-1/student-name/web-dev-1
+    # for dir in test_directories:
 
-        # file: /Users/sarah/Rithm/rithm-apps/curric/assessments/web-dev-1/solution/sortAlmostSorted.test.js
-        for file in file_list:
+    #     # file: /Users/sarah/Rithm/rithm-apps/curric/assessments/web-dev-1/solution/sortAlmostSorted.test.js
+    #     for file in file_list:
 
-            # filename: 'sortAlmostSorted.test.js'
-            filename = file.split('/')[-1]
+    #         # filename: 'sortAlmostSorted.test.js'
+    #         filename = file.split('/')[-1]
 
-            # test_name: 'sortAlmostSorted'
-            test_name = filename.split(".")[0]
+    #         # test_name: 'sortAlmostSorted'
+    #         test_name = filename.split(".")[0]
 
-            # new_test_file_path: /Users/sarah/Rithm/assessments/r31/test-web-dev-1/student-name/web-dev-1/rithm-sortAlmostSorted.test.js
-            new_test_file_path = f'{dir}/rithm-{filename}'
-            subprocess.run(f'cp {file} "{new_test_file_path}"', shell=True) #double quotes for student paths with spaces
+    #         # new_test_file_path: /Users/sarah/Rithm/assessments/r31/test-web-dev-1/student-name/web-dev-1/rithm-sortAlmostSorted.test.js
+    #         new_test_file_path = f'{dir}/rithm-{filename}'
+    #         subprocess.run(f'cp {file} "{new_test_file_path}"', shell=True) #double quotes for student paths with spaces
 
-            # find all it(" and test(" occurrences and replace with it("rithm test:
-            # TODO: use a regex OR to combine into one
-            # TODO: also need to account for it(' ..... ') with single quotes
-            subprocess.run(fr'sed -i "" "s/it(\"/it(\"rithm test: /g" "{new_test_file_path}"', shell=True)
-            subprocess.run(fr'sed -i "" "s/test(\"/it(\"rithm test: /g" "{new_test_file_path}"', shell=True)
+    #         # find all it(" and test(" occurrences and replace with it("rithm test:
+    #         # TODO: use a regex OR to combine into one
+    #         # TODO: also need to account for it(' ..... ') with single quotes
+    #         subprocess.run(fr'sed -i "" "s/it(\"/it(\"rithm test: /g" "{new_test_file_path}"', shell=True)
+    #         subprocess.run(fr'sed -i "" "s/test(\"/it(\"rithm test: /g" "{new_test_file_path}"', shell=True)
 
-            # line breaks and weird indentations are part of the command, don't change
-            # extra "" around html file name to account for student paths with spaces
-            subprocess.run(fr"""sed -i '' '\|.*</body>.*| i\
-    <script src="rithm-{filename}"></script>
-            ' "{dir}/{test_name}.html"
-            """, shell=True)
-
-
-def find_jasmine_tests(assessment_path, assessment_id):
-    """ Takes in a path like '/Users/sarah/Rithm/assessments/r31/', and an assessment_id
-    like 'web-dev-2'. Finds and returns all .html files that contain Jasmine tests.
-    """
-    # print("find_jasmine_tests", assessment_path, assessment_id)
-    # look in the current assessment folder for all .html files.
-    # Search those .html files recursively (-r) for the word (-w) "jasmine-core"
-    # jasmine-core is part of the CDN link and therefore is a good identifier for any
-    # html file that will run jasmine tests
-    # when and html file that contains the word "jasmine-core" is found,
-    # output the name of that file (-l)
-
-    # escape the curly braces needed for grep with more curly braces per Python f-string escape rules
-    results = subprocess.run(
-        f'find {assessment_path}/{assessment_id} -name "*.html" -exec grep -rlw "jasmine-core" {{}} \;',
-        shell=True,
-        capture_output=True
-    )
-
-    file_list = results.stdout.decode('utf-8').splitlines()
-
-    # put the filename in quotes in case the student put spaces in their path
-    formatted_file_names = [str(file) for file in file_list]
-    print(formatted_file_names)
-    return formatted_file_names
-
-# find_jasmine_tests("/Users/sarah/Rithm/assessments/r31/test", "js-problem-solving")
+    #         # line breaks and weird indentations are part of the command, don't change
+    #         # extra "" around html file name to account for student paths with spaces
+    #         subprocess.run(fr"""sed -i '' '\|.*</body>.*| i\
+    # <script src="rithm-{filename}"></script>
+    #         ' "{dir}/{test_name}.html"
+    #         """, shell=True)
 
 
-def find_format_run_jasmine_tests(curric_path, assessment_path, assessment_id):
-    # find all .test.js files and add rithm links (setup_jasmine_tests)
-    # find .html files with Jasmine tests in each student directory
-    # make jasmine report - open all .html files in chrome and scrape results
-    # print("find_format_run_jasmine_tests", curric_path, assessment_path, assessment_id )
-    if setup_jasmine_tests(curric_path, assessment_path, assessment_id) is False:
-        return
-    html_files = find_jasmine_tests(assessment_path, assessment_id)
-    make_jasmine_report(html_files)
+# def find_jasmine_tests(assessment_path, assessment_id):
+#     """ Takes in a path like '/Users/sarah/Rithm/assessments/r31/', and an assessment_id
+#     like 'web-dev-2'. Finds and returns all .html files that contain Jasmine tests.
+#     """
+#     # print("find_jasmine_tests", assessment_path, assessment_id)
+#     # look in the current assessment folder for all .html files.
+#     # Search those .html files recursively (-r) for the word (-w) "jasmine-core"
+#     # jasmine-core is part of the CDN link and therefore is a good identifier for any
+#     # html file that will run jasmine tests
+#     # when and html file that contains the word "jasmine-core" is found,
+#     # output the name of that file (-l)
 
-# find_format_run_jasmine_tests("", "/Users/sarah/Rithm/assessments/r31/test", "js-problem-solving")
+#     # escape the curly braces needed for grep with more curly braces per Python f-string escape rules
+#     results = subprocess.run(
+#         f'find {assessment_path}/{assessment_id} -name "*.html" -exec grep -rlw "jasmine-core" {{}} \;',
+#         shell=True,
+#         capture_output=True
+#     )
+
+#     file_list = results.stdout.decode('utf-8').splitlines()
+
+#     # put the filename in quotes in case the student put spaces in their path
+#     formatted_file_names = [str(file) for file in file_list]
+#     print(formatted_file_names)
+#     return formatted_file_names
+
+# # find_jasmine_tests("/Users/sarah/Rithm/assessments/r31/test", "js-problem-solving")
+
+
+# def find_format_run_jasmine_tests(curric_path, assessment_path, assessment_id):
+#     # find all .test.js files and add rithm links (setup_jasmine_tests)
+#     # find .html files with Jasmine tests in each student directory
+#     # make jasmine report - open all .html files in chrome and scrape results
+#     # print("find_format_run_jasmine_tests", curric_path, assessment_path, assessment_id )
+#     if setup_jasmine_tests(curric_path, assessment_path, assessment_id) is False:
+#         return
+#     html_files = find_jasmine_tests(assessment_path, assessment_id)
+#     make_jasmine_report(html_files)
+
+# # find_format_run_jasmine_tests("", "/Users/sarah/Rithm/assessments/r31/test", "js-problem-solving")
 
 def find_directories_with_sought_file_type(path, id, file_matcher):
     """ Locate and return the directories containing a certain file type: '*.txt'
